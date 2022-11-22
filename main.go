@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"github.com/paypal/load-watcher/pkg/watcher"
-	"github.com/paypal/load-watcher/pkg/watcher/api"
-	log "github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/charstal/load-monitor/pkg/server"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -36,16 +36,27 @@ func init() {
 }
 
 func main() {
-	client, err := api.NewLibraryClient(watcher.EnvMetricProviderOpts)
-	if err != nil {
-		log.Fatalf("unable to create client: %v", err)
-	}
-	metrics, err := client.GetLatestWatcherMetrics()
+	// client, err := api.NewLibraryClient(watcher.EnvMetricProviderOpts)
+	// if err != nil {
+	// 	log.Fatalf("unable to create client: %v", err)
+	// }
+	// metrics, err := client.GetLatestWatcherMetrics()
+	// if err != nil {
+	// 	log.Errorf("unable to get watcher metrics: %v", err)
+	// }
+	// log.Debugf("received metrics: %v", metrics)
+
+	ch := make(chan struct{}, 1)
+
+	loadMonitorServer, err := server.NewServer(ch)
+
 	if err != nil {
 		log.Errorf("unable to get watcher metrics: %v", err)
+		panic("some error")
 	}
-	log.Debugf("received metrics: %v", metrics)
 
-	// Keep the watcher server up
-	select {}
+	loadMonitorServer.Run()
+	log.Infof("server starting")
+
+	<-ch
 }

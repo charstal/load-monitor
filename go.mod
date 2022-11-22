@@ -1,4 +1,4 @@
-module github.com/paypal/load-watcher
+module github.com/charstal/load-monitor
 
 go 1.16
 

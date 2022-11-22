@@ -17,11 +17,11 @@ BUILDENVVAR=CGO_ENABLED=0
 
 .PHONY: all
 all: build
-	chmod +x bin/load-watcher
+	chmod +x bin/load-monitor
 
 .PHONY: build
 build:
-	$(COMMONENVVAR) $(BUILDENVVAR) go build -o bin/load-watcher main.go
+	$(COMMONENVVAR) $(BUILDENVVAR) go build -o bin/load-monitor main.go
 
 .PHONY: clean
 clean:

@@ -16,58 +16,63 @@ limitations under the License.
 
 package watcher
 
-var FifteenMinutesMetricsMap = map[string][]Metric{
+import (
+	"github.com/charstal/load-monitor/pkg/metricsprovider"
+	"github.com/charstal/load-monitor/pkg/metricstype"
+)
+
+var FifteenMinutesMetricsMap = map[string][]metricstype.Metric{
 	FirstNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 26,
 		},
 	},
 	SecondNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 60,
 		},
 	},
 }
 
-var TenMinutesMetricsMap = map[string][]Metric{
+var TenMinutesMetricsMap = map[string][]metricstype.Metric{
 	FirstNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 22,
 		},
 	},
 	SecondNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 65,
 		},
 	},
 }
 
-var FiveMinutesMetricsMap = map[string][]Metric{
+var FiveMinutesMetricsMap = map[string][]metricstype.Metric{
 	FirstNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 21,
 		},
 	},
 	SecondNode: {
 		{
 			Name:  "test-cpu",
-			Type:  CPU,
+			Type:  metricstype.CPU,
 			Value: 50,
 		},
 	},
 }
 
-var _ MetricsProviderClient = &testServerClient{}
+var _ metricsprovider.MetricsProviderClient = &testServerClient{}
 
 const (
 	FirstNode            = "worker-1"
@@ -82,11 +87,11 @@ func (t testServerClient) Name() string {
 	return TestServerClientName
 }
 
-func NewTestMetricsServerClient() MetricsProviderClient {
+func NewTestMetricsServerClient() metricsprovider.MetricsProviderClient {
 	return testServerClient{}
 }
 
-func (t testServerClient) FetchHostMetrics(host string, window *Window) ([]Metric, error) {
+func (t testServerClient) FetchHostMetrics(host string, window *metricstype.Window) ([]metricstype.Metric, error) {
 	if _, ok := FifteenMinutesMetricsMap[host]; !ok {
 		return nil, nil
 	}
@@ -97,19 +102,19 @@ func (t testServerClient) FetchHostMetrics(host string, window *Window) ([]Metri
 		return nil, nil
 	}
 
-	if window.Duration == TenMinutes {
+	if window.Duration == metricstype.TenMinutes {
 		return TenMinutesMetricsMap[host], nil
-	} else if window.Duration == FiveMinutes {
+	} else if window.Duration == metricstype.FiveMinutes {
 		return FiveMinutesMetricsMap[host], nil
 	}
 
 	return FifteenMinutesMetricsMap[host], nil
 }
 
-func (t testServerClient) FetchAllHostsMetrics(window *Window) (map[string][]Metric, error) {
-	if window.Duration == TenMinutes {
+func (t testServerClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string][]metricstype.Metric, error) {
+	if window.Duration == metricstype.TenMinutes {
 		return TenMinutesMetricsMap, nil
-	} else if window.Duration == FiveMinutes {
+	} else if window.Duration == metricstype.FiveMinutes {
 		return FiveMinutesMetricsMap, nil
 	}
 

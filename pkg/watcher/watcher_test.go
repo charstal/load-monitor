@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/charstal/load-monitor/pkg/metricstype"
 	"github.com/francoispqt/gojay"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,18 +32,18 @@ import (
 var w *Watcher
 
 func TestGetLatestWatcherMetrics(t *testing.T) {
-	var metrics *WatcherMetrics
-	metrics, err := w.GetLatestWatcherMetrics(FifteenMinutes)
+	var metrics *metricstype.WatcherMetrics
+	metrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
 	require.Nil(t, err)
 	assert.Equal(t, FifteenMinutesMetricsMap[FirstNode], metrics.Data.NodeMetricsMap[FirstNode].Metrics)
 	assert.Equal(t, FifteenMinutesMetricsMap[SecondNode], metrics.Data.NodeMetricsMap[SecondNode].Metrics)
 
-	metrics, err = w.GetLatestWatcherMetrics(TenMinutes)
+	metrics, err = w.GetLatestWatcherMetrics(metricstype.TenMinutes)
 	require.Nil(t, err)
 	assert.Equal(t, TenMinutesMetricsMap[FirstNode], metrics.Data.NodeMetricsMap[FirstNode].Metrics)
 	assert.Equal(t, TenMinutesMetricsMap[SecondNode], metrics.Data.NodeMetricsMap[SecondNode].Metrics)
 
-	metrics, err = w.GetLatestWatcherMetrics(FiveMinutes)
+	metrics, err = w.GetLatestWatcherMetrics(metricstype.FiveMinutes)
 	require.Nil(t, err)
 	assert.Equal(t, FiveMinutesMetricsMap[FirstNode], metrics.Data.NodeMetricsMap[FirstNode].Metrics)
 	assert.Equal(t, FiveMinutesMetricsMap[SecondNode], metrics.Data.NodeMetricsMap[SecondNode].Metrics)
@@ -58,10 +59,10 @@ func TestWatcherAPIAllHosts(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	require.Equal(t, http.StatusOK, rr.Code)
 
-	expectedMetrics, err := w.GetLatestWatcherMetrics(FifteenMinutes)
+	expectedMetrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
 	require.Nil(t, err)
-	data := Data{NodeMetricsMap: make(map[string]NodeMetrics)}
-	var watcherMetrics = &WatcherMetrics{Data: data}
+	data := metricstype.Data{NodeMetricsMap: make(map[string]metricstype.NodeMetrics)}
+	var watcherMetrics = &metricstype.WatcherMetrics{Data: data}
 	err = gojay.UnmarshalJSONObject(rr.Body.Bytes(), watcherMetrics)
 	require.Nil(t, err)
 	assert.Equal(t, expectedMetrics, watcherMetrics)
@@ -81,10 +82,10 @@ func TestWatcherAPISingleHost(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	require.Equal(t, http.StatusOK, rr.Code)
 
-	expectedMetrics, err := w.GetLatestWatcherMetrics(FifteenMinutes)
+	expectedMetrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
 	require.Nil(t, err)
-	data := Data{NodeMetricsMap: make(map[string]NodeMetrics)}
-	var watcherMetrics = &WatcherMetrics{Data: data}
+	data := metricstype.Data{NodeMetricsMap: make(map[string]metricstype.NodeMetrics)}
+	var watcherMetrics = &metricstype.WatcherMetrics{Data: data}
 	err = gojay.UnmarshalJSONObject(rr.Body.Bytes(), watcherMetrics)
 	require.Nil(t, err)
 	assert.Equal(t, expectedMetrics.Data.NodeMetricsMap[FirstNode], watcherMetrics.Data.NodeMetricsMap[FirstNode])
@@ -134,7 +135,8 @@ func TestWatcherHealthCheck(t *testing.T) {
 func TestMain(m *testing.M) {
 	client := NewTestMetricsServerClient()
 	w = NewWatcher(client)
-	w.StartWatching()
+	ch := make(chan struct{})
+	w.StartWatching(ch)
 
 	ret := m.Run()
 	os.Exit(ret)
