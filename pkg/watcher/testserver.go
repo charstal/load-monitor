@@ -121,6 +121,6 @@ func (t testServerClient) FetchAllHostsMetrics(window *metricstype.Window) (map[
 	return FifteenMinutesMetricsMap, nil
 }
 
-func (t testServerClient) Health() (int, error) {
+func (t testServerClient) Healthy() (int, error) {
 	return 0, nil
 }
