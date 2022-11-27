@@ -3,15 +3,29 @@ package metricstype
 import "time"
 
 const (
-	FifteenMinutes  = "15m"
-	TenMinutes      = "10m"
-	FiveMinutes     = "5m"
-	CPU             = "CPU"
-	Memory          = "Memory"
-	Average         = "AVG"
-	Std             = "STD"
+	// time
+	FifteenMinutes = "15m"
+	TenMinutes     = "10m"
+	FiveMinutes    = "5m"
+
+	// operator
+	Average         = "Avg"
+	Std             = "Std"
 	Latest          = "Latest"
 	UnknownOperator = "Unknown"
+	Capacity        = "Capacity"
+
+	// Resource
+	CPU               = "cpu"
+	Memory            = "memory"
+	Ephemeral_storage = "ephemeral_storage"
+	Hugepages_2Mi     = "hugepages_2Mi"
+	Pods              = "pods"
+
+	// unit
+	Ratio   = "ratio"
+	Core    = "core"
+	Integer = "integer"
 )
 
 type Window struct {
@@ -21,11 +35,12 @@ type Window struct {
 }
 
 type Metric struct {
-	Name     string  `json:"name"`             // Name of metric at the provider
-	Type     string  `json:"type"`             // CPU or Memory
-	Operator string  `json:"operator"`         // STD or AVE or SUM, etc.
-	Rollup   string  `json:"rollup,omitempty"` // Rollup used for metric calculation
-	Value    float64 `json:"value"`            // Value is expected to be in %
+	Name     string  `json:"name"`               // Name of metric at the provider
+	Type     string  `json:"type,omitempty"`     // CPU or Memory
+	Operator string  `json:"operator,omitempty"` // STD or AVE or SUM, etc.
+	Rollup   string  `json:"rollup,omitempty"`   // Rollup used for metric calculation
+	Unit     string  `json:"unit,omitempty"`     // Unit of Value
+	Value    float64 `json:"value"`              // Value is expected to be in %
 }
 
 type NodeMetricsMap map[string]NodeMetrics

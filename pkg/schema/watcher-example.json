@@ -1,53 +1,121 @@
 {
-  "timestamp": 1556987522,
+  "timestamp": 1669477495,
   "window": {
     "duration": "15m",
-    "start": 1556984522,
-    "end": 1556985422
+    "start": 1669476595,
+    "end": 1669477495
   },
-  "source": "InfluxDB",
+  "source": "Prometheus",
   "data": {
-    "node-1": {
-      "metrics": [
-        {
-          "name": "host.cpu.utilisation",
-          "type": "cpu",
-          "rollup": "AVG",
-          "value": 20
-        },
-        {
-          "name": "host.memory.utilisation",
-          "type": "memory",
-          "rollup": "STD",
-          "value": 5
+    "NodeMetricsMap": {
+      "k8s-node02": {
+        "metrics": [
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 2.4603654970760935
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 21.565498829717807
+          },
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.022208314553654396
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.026860612829410244
+          }
+        ],
+        "tags": {},
+        "metadata": {
+          "dataCenter": ""
         }
-      ],
-      "tags": {},
-      "metadata": {
-        "dataCenter": "data-center-1",
-        "pool": "critical-apps"
+      },
+      "k8s-master": {
+        "metrics": [
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 2.493187134502949
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 20.040904793315526
+          },
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.015464381267675424
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.030403061607922083
+          }
+        ],
+        "tags": {},
+        "metadata": {
+          "dataCenter": ""
+        }
+      },
+      "k8s-node01": {
+        "metrics": [
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 2.5108040935676272
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "AVG",
+            "rollup": "15m",
+            "value": 22.34319803392485
+          },
+          {
+            "name": "instance:node_cpu:ratio",
+            "type": "CPU",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.015433978630665488
+          },
+          {
+            "name": "instance:node_memory_utilisation:ratio",
+            "type": "Memory",
+            "operator": "STD",
+            "rollup": "15m",
+            "value": 0.03644603027048426
+          }
+        ],
+        "tags": {},
+        "metadata": {
+          "dataCenter": ""
+        }
       }
-    },
-    "node-2": {
-      "metrics": [
-        {
-          "name": "host.cpu.utilisation",
-          "type": "cpu",
-          "rollup": "AVG",
-          "value": 20
-        },
-        {
-          "name": "host.memory.utilisation",
-          "type": "memory",
-          "rollup": "STD",
-          "value": 5
-        }
-      ]
-    },
-    "metadata": {
-      "dataCenter": "data-center-2",
-      "pool": "light-apps"
-    },
-    "tags": {}
+    }
   }
 }

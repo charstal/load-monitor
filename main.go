@@ -51,7 +51,7 @@ func main() {
 	loadMonitorServer, err := server.NewServer(ch)
 
 	if err != nil {
-		log.Errorf("unable to get watcher metrics: %v", err)
+		log.Errorf("unable to create server: %v", err)
 		panic("some error")
 	}
 

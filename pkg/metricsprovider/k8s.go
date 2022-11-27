@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 
+	cfg "github.com/charstal/load-monitor/pkg/config"
 	"github.com/charstal/load-monitor/pkg/metricstype"
 
 	log "github.com/sirupsen/logrus"
@@ -38,14 +39,11 @@ var (
 	kubeConfigPath    string
 )
 
-const (
-	// env variable that provides path to kube config file, if deploying from outside K8s cluster
-	kubeConfig = "KUBE_CONFIG"
-)
+const ()
 
 func init() {
 	var ok bool
-	kubeConfigPath, ok = os.LookupEnv(kubeConfig)
+	kubeConfigPath, ok = os.LookupEnv(cfg.KubeConfig)
 	if ok {
 		kubeConfigPresent = true
 	}

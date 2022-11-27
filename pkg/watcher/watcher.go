@@ -53,46 +53,6 @@ type Watcher struct {
 	shutdown      chan os.Signal
 }
 
-// type Window struct {
-// 	Duration string `json:"duration"`
-// 	Start    int64  `json:"start"`
-// 	End      int64  `json:"end"`
-// }
-
-// type Metric struct {
-// 	Name     string  `json:"name"`             // Name of metric at the provider
-// 	Type     string  `json:"type"`             // CPU or Memory
-// 	Operator string  `json:"operator"`         // STD or AVE or SUM, etc.
-// 	Rollup   string  `json:"rollup,omitempty"` // Rollup used for metric calculation
-// 	Value    float64 `json:"value"`            // Value is expected to be in %
-// }
-
-// type NodeMetricsMap map[string]NodeMetrics
-
-// type Data struct {
-// 	NodeMetricsMap NodeMetricsMap
-// }
-
-// type WatcherMetrics struct {
-// 	Timestamp int64  `json:"timestamp"`
-// 	Window    Window `json:"window"`
-// 	Source    string `json:"source"`
-// 	Data      Data   `json:"data"`
-// }
-
-// type Tags struct {
-// }
-
-// type Metadata struct {
-// 	DataCenter string `json:"dataCenter,omitempty"`
-// }
-
-// type NodeMetrics struct {
-// 	Metrics  []Metric `json:"metrics,omitempty"`
-// 	Tags     Tags     `json:"tags,omitempty"`
-// 	Metadata Metadata `json:"metadata,omitempty"`
-// }
-
 // NewWatcher Returns a new initialised Watcher
 func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 	sizePerWindow := 5

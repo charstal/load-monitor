@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +36,7 @@ import (
 
 	"github.com/charstal/load-monitor/pkg/metricstype"
 
+	cfg "github.com/charstal/load-monitor/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/config"
@@ -44,22 +46,80 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
+type PromMethod = string
+type PromResource = string
+type PromSQL = string
+
 const (
-	EnableOpenShiftAuth = "ENABLE_OPENSHIFT_AUTH"
-	DefaultPromAddress  = "http://prometheus-k8s:9090"
-	healthyURL          = "-/healthy"
-	promStd             = "stddev_over_time"
-	promAvg             = "avg_over_time"
-	promCpuMetric       = "instance:node_cpu:ratio"
-	promMemMetric       = "instance:node_memory_utilisation:ratio"
-	allHosts            = "all"
-	hostMetricKey       = "instance"
-	defaultKubeConfig   = "~/.kube/config"
+	baseHealthyURL = "-/healthy"
+)
+
+const (
+	Std    PromMethod = "stddev_over_time"
+	Avg    PromMethod = "avg_over_time"
+	Latest PromMethod = "Latest"
+)
+
+const (
+	KubeNodeStatusCapacity PromResource = "kube_node_status_capacity"
+	NodeCpuRatio           PromResource = "instance:node_cpu:ratio"
+	NodeMemoryUtilRatio    PromResource = "instance:node_memory_utilisation:ratio"
+
+	NodeCpuRateSum           PromResource = "instance:node_cpu:rate:sum"
+	NodeCpuNum               PromResource = "instance:node_num_cpu:sum"
+	NodeNetworkReceiveBytes  PromResource = "instance:node_network_receive_bytes:rate:sum"
+	NodeNetworkTransmitBytes PromResource = "instance:node_network_transmit_bytes:rate:sum"
+
+	NodeCpuUtilRate5m                         PromResource = "instance:node_cpu_utilisation:rate5m"
+	NodeNetworkReceiveBytesExcludinglo5m      PromResource = "instance:node_network_receive_bytes_excluding_lo:rate5m"
+	NodeNetworkReceiveDropBytesExcludinglo5m  PromResource = "instance:node_network_receive_drop_excluding_lo:rate5m"
+	NodeNetworkTransmitBytesExcludinglo5m     PromResource = "instance:node_network_transmit_bytes_excluding_lo:rate5m"
+	NodeNetworkTransmitDropBytesExcludinglo5m PromResource = "instance:node_network_transmit_drop_excluding_lo:rate5m"
+	NodeDiskIOTimeSecondsRate5m               PromResource = "instance_device:node_disk_io_time_seconds:rate5m"
+	NodeDiskIOTimeWeightedSecondsRate5m       PromResource = "instance_device:node_disk_io_time_weighted_seconds:rate5m"
+)
+
+const (
+	PromSQLNodeDiskTotalUtilRate PromSQL = "sum by (instance) (rate(node_disk_reads_completed_total[%s]) + rate(node_disk_writes_completed_total[%s]))"
+	PromSQLNodeDiskReadUtilRate  PromSQL = "sum by (instance) (rate(node_disk_reads_completed_total[%s]))"
+	PromSQLNodeDiskWriteUtilRate PromSQL = "sum by (instance) (rate(node_disk_writes_completed_total[%s]))"
+
+	PromSQLNodeDiskUtilRate5m PromSQL = `sum by (instance) (
+		instance_device:node_disk_io_time_seconds:rate5m
+	)`
+
+	PromSQLNodeDiskSaturation5m PromSQL = `sum by (instance) (
+		instance_device:node_disk_io_time_weighted_seconds:rate5m 
+		/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m)))`
 )
 
 var (
-	promAddress string
-	promToken   string
+	ratioSource = []PromResource{NodeCpuRatio, NodeMemoryUtilRatio}
+	otherSql5m  = []PromResource{
+		PromSQLNodeDiskSaturation5m, PromSQLNodeDiskUtilRate5m, NodeCpuUtilRate5m,
+		NodeNetworkReceiveBytesExcludinglo5m, NodeNetworkReceiveDropBytesExcludinglo5m,
+		NodeNetworkTransmitBytesExcludinglo5m, NodeNetworkTransmitDropBytesExcludinglo5m,
+	}
+	otherSql = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
+
+	sql2NameMap = map[string]string{
+		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
+		PromSQLNodeDiskReadUtilRate:               "node_disk_read_util_rate",
+		PromSQLNodeDiskWriteUtilRate:              "node_disk_Write_util_rate",
+		PromSQLNodeDiskSaturation5m:               "node_disk_saturation",
+		PromSQLNodeDiskUtilRate5m:                 "node_disk_util_rate",
+		NodeCpuUtilRate5m:                         "node_cpu_util_rate",
+		NodeNetworkReceiveBytesExcludinglo5m:      "node_network_receive_bytes_excluding_lo",
+		NodeNetworkReceiveDropBytesExcludinglo5m:  "node_network_receive_drop_bytes_excluding_lo",
+		NodeNetworkTransmitBytesExcludinglo5m:     "node_network_transmit_bytes_excluding_lo",
+		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
+	}
+)
+
+var (
+	promAddress    string
+	promToken      string
+	promHealthyUrl string
 )
 
 type promClient struct {
@@ -73,28 +133,29 @@ func NewPromClient(opts MetricsProviderOpts) (MetricsProviderClient, error) {
 
 	var client api.Client
 	var err error
-	promToken, promAddress = "", DefaultPromAddress
+	promToken, promAddress = "", cfg.DefaultPromAddress
 	if opts.AuthToken != "" {
 		promToken = opts.AuthToken
 	}
 	if opts.Address != "" {
 		promAddress = opts.Address
-
 	}
+
+	promHealthyUrl = promAddress + baseHealthyURL
 
 	// Ignore TLS verify errors if InsecureSkipVerify is set
 	roundTripper := api.DefaultRoundTripper
 
 	// Check if EnableOpenShiftAuth is set.
-	_, enableOpenShiftAuth := os.LookupEnv(EnableOpenShiftAuth)
+	_, enableOpenShiftAuth := os.LookupEnv(cfg.EnableOpenShiftAuth)
 	if enableOpenShiftAuth {
 		// Create the config for kubernetes client
 		clusterConfig, err := rest.InClusterConfig()
 		if err != nil {
 			// Get the kubeconfig path
-			kubeConfigPath, ok := os.LookupEnv(kubeConfig)
+			kubeConfigPath, ok := os.LookupEnv(cfg.KubeConfig)
 			if !ok {
-				kubeConfigPath = defaultKubeConfig
+				kubeConfigPath = cfg.DefaultKubeConfig
 			}
 			clusterConfig, err = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 			if err != nil {
@@ -171,37 +232,81 @@ func (s promClient) Name() string {
 	return PromClientName
 }
 
-func (s promClient) FetchHostMetrics(host string, window *metricstype.Window) ([]metricstype.Metric, error) {
-	var metricList []metricstype.Metric
+func (s promClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string][]metricstype.Metric, error) {
+	allMetrics := make(map[string][]metricstype.Metric)
 	var anyerr error
 
-	for _, method := range []string{promAvg, promStd} {
-		for _, metric := range []string{promCpuMetric, promMemMetric} {
-			promQuery := s.buildPromQuery(host, metric, method, window.Duration)
-			promResults, err := s.getPromResults(promQuery)
+	if err := s.fetchCapacity(&allMetrics); err != nil {
+		log.Errorf("cannot fetching capacity %v", err)
+		anyerr = err
+	}
 
+	if err := s.fetchAllCpuMem(window, &allMetrics); err != nil {
+		log.Errorf("cannot fetching all cpu and memory %v", err)
+	}
+
+	if err := s.fetchFromSql(window, &allMetrics); err != nil {
+		log.Errorf("cannot fetching from sql %v", err)
+	}
+
+	return allMetrics, anyerr
+
+}
+
+func (s promClient) FetchHostMetrics(host string, window *metricstype.Window) ([]metricstype.Metric, error) {
+	return nil, nil
+}
+
+func (s promClient) fetchFromSql(window *metricstype.Window, m *map[string][]metricstype.Metric) error {
+	var anyerr error
+	for _, sql := range otherSql {
+		var newsql string
+		if sql == PromSQLNodeDiskTotalUtilRate {
+			newsql = fmt.Sprintf(sql, window.Duration, window.Duration)
+		} else {
+			newsql = fmt.Sprintf(sql, window.Duration)
+		}
+
+		results, err := s.getPromResults(newsql)
+		if err != nil {
+			log.Errorf("error querying Prometheus for query %v: %v\n", newsql, err)
+			anyerr = err
+			continue
+		}
+
+		curMetricMap := s.otherSqlData2MetricMap(sql, results, "")
+		for k, v := range curMetricMap {
+			(*m)[k] = append((*m)[k], v...)
+		}
+
+	}
+	if window.Duration == metricstype.FiveMinutes {
+		for _, sql := range otherSql5m {
+			results, err := s.getPromResults(sql)
 			if err != nil {
-				log.Errorf("error querying Prometheus for query %v: %v\n", promQuery, err)
+				log.Errorf("error querying Prometheus for query %v: %v\n", sql, err)
 				anyerr = err
 				continue
 			}
 
-			curMetricMap := s.promResults2MetricMap(promResults, metric, method, window.Duration)
-			metricList = append(metricList, curMetricMap[host]...)
+			curMetricMap := s.otherSqlData2MetricMap(sql, results, "5m")
+			for k, v := range curMetricMap {
+				(*m)[k] = append((*m)[k], v...)
+			}
 		}
 	}
 
-	return metricList, anyerr
+	return anyerr
 }
 
-// FetchAllHostsMetrics Fetch all host metrics with different operators (avg_over_time, stddev_over_time) and different resource types (CPU, Memory)
-func (s promClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string][]metricstype.Metric, error) {
-	hostMetrics := make(map[string][]metricstype.Metric)
+// fetchAllCpuMem Fetch all host metrics with different operators (avg_over_time, stddev_over_time, realtime) and
+// different resource types (CPU, Memory)
+func (s promClient) fetchAllCpuMem(window *metricstype.Window, m *map[string][]metricstype.Metric) error {
 	var anyerr error
 
-	for _, method := range []string{promAvg, promStd} {
-		for _, metric := range []string{promCpuMetric, promMemMetric} {
-			promQuery := s.buildPromQuery(allHosts, metric, method, window.Duration)
+	for _, metric := range ratioSource {
+		for _, method := range []PromMethod{Avg, Std, Latest} {
+			promQuery := s.buildCpuMemPromQuery(metric, method, window.Duration)
 			promResults, err := s.getPromResults(promQuery)
 
 			if err != nil {
@@ -210,39 +315,41 @@ func (s promClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string
 				continue
 			}
 
-			curMetricMap := s.promResults2MetricMap(promResults, metric, method, window.Duration)
+			curMetricMap := s.nodeCpuMem2MetricMap(promResults, metric, method, window.Duration)
 
 			for k, v := range curMetricMap {
-				hostMetrics[k] = append(hostMetrics[k], v...)
+				(*m)[k] = append((*m)[k], v...)
 			}
 		}
 	}
 
-	return hostMetrics, anyerr
+	return anyerr
 }
 
-func (s promClient) Healthy() (int, error) {
-	req, err := http.NewRequest("GET", promAddress+healthyURL, nil)
+func (s promClient) fetchCapacity(m *map[string][]metricstype.Metric) error {
+	log.Info("fetching capacity")
+	promNodeCapaicty, err := s.getPromResults(KubeNodeStatusCapacity)
 	if err != nil {
-		return -1, err
+		log.Errorf("fetching capacity error")
+		return err
 	}
-	resp, _, err := s.client.Do(context.Background(), req)
-	if err != nil {
-		return -1, err
+
+	result := s.nodeCapacity2MetricMap(promNodeCapaicty)
+
+	for k, v := range result {
+		(*m)[k] = append((*m)[k], v...)
 	}
-	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("received response status code: %v", resp.StatusCode)
-	}
-	return 0, nil
+
+	return nil
 }
 
-func (s promClient) buildPromQuery(host string, metric string, method string, rollup string) string {
+func (s promClient) buildCpuMemPromQuery(metric PromResource, method PromMethod, rollup string) string {
 	var promQuery string
 
-	if host == allHosts {
-		promQuery = fmt.Sprintf("%s(%s[%s])", method, metric, rollup)
+	if method == Latest {
+		promQuery = metric
 	} else {
-		promQuery = fmt.Sprintf("%s(%s{%s=\"%s\"}[%s])", method, metric, hostMetricKey, host, rollup)
+		promQuery = fmt.Sprintf("%s(%s[%s])", method, metric, rollup)
 	}
 
 	return promQuery
@@ -260,41 +367,98 @@ func (s promClient) getPromResults(promQuery string) (model.Value, error) {
 	if len(warnings) > 0 {
 		log.Warnf("Warnings: %v\n", warnings)
 	}
-	log.Debugf("result:\n%v\n", results)
+	// log.Debugf("result:\n%v\n", results)
 
 	return results, nil
 }
 
-func (s promClient) promResults2MetricMap(promresults model.Value, metric string, method string, rollup string) map[string][]metricstype.Metric {
+func (s promClient) otherSqlData2MetricMap(sql string, data model.Value, rollup string) map[string][]metricstype.Metric {
+	curMetrics := make(map[string][]metricstype.Metric)
+
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			host := string(result.Metric["instance"])
+			value := float64(result.Value)
+			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: "", Operator: metricstype.UnknownOperator, Rollup: rollup, Unit: "", Value: value}
+			curMetrics[host] = append(curMetrics[host], curMetric)
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+	}
+	return curMetrics
+}
+
+func (s promClient) nodeCapacity2MetricMap(data model.Value) map[string][]metricstype.Metric {
+	curMetrics := make(map[string][]metricstype.Metric)
+
+	operator := metricstype.Capacity
+
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			host := string(result.Metric["node"])
+			resource := strings.ToLower(string(result.Metric["resource"]))
+			unit := strings.ToLower(string(result.Metric["unit"]))
+			value := float64(result.Value)
+			curMetric := metricstype.Metric{Name: KubeNodeStatusCapacity, Type: resource, Operator: operator, Rollup: "", Unit: unit, Value: value}
+			curMetrics[host] = append(curMetrics[host], curMetric)
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+	}
+	return curMetrics
+}
+
+func (s promClient) nodeCpuMem2MetricMap(data model.Value, metric PromResource, method PromMethod, rollup string) map[string][]metricstype.Metric {
 	var metricType string
 	var operator string
+	var unit string
 
 	curMetrics := make(map[string][]metricstype.Metric)
 
-	if metric == promCpuMetric {
+	if metric == NodeCpuRatio {
 		metricType = metricstype.CPU
 	} else {
 		metricType = metricstype.Memory
 	}
 
-	if method == promAvg {
+	if method == NodeMemoryUtilRatio {
 		operator = metricstype.Average
-	} else if method == promStd {
+	} else if method == Std {
 		operator = metricstype.Std
 	} else {
 		operator = metricstype.UnknownOperator
 	}
 
-	switch promresults.(type) {
+	unit = metricstype.Ratio
+
+	switch data.(type) {
 	case model.Vector:
-		for _, result := range promresults.(model.Vector) {
-			curMetric := metricstype.Metric{Name: metric, Type: metricType, Operator: operator, Rollup: rollup, Value: float64(result.Value * 100)}
-			curHost := string(result.Metric[hostMetricKey])
+		for _, result := range data.(model.Vector) {
+			value := float64(result.Value * 100)
+			curHost := string(result.Metric["instance"])
+			curMetric := metricstype.Metric{Name: metric, Type: metricType, Operator: operator, Rollup: rollup, Unit: unit, Value: value}
 			curMetrics[curHost] = append(curMetrics[curHost], curMetric)
 		}
 	default:
-		log.Errorf("error: The Prometheus results should not be type: %v.\n", promresults.Type())
+		log.Errorf("error: The Prometheus results should not be type: %v.\n", data.Type())
 	}
 
 	return curMetrics
+}
+
+func (s promClient) Healthy() (int, error) {
+	req, err := http.NewRequest("GET", promHealthyUrl, nil)
+	if err != nil {
+		return -1, err
+	}
+	resp, _, err := s.client.Do(context.Background(), req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return -1, fmt.Errorf("received response status code: %v", resp.StatusCode)
+	}
+	return 0, nil
 }

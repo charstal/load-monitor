@@ -98,6 +98,7 @@ func (m *Metric) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("operator", m.Operator)
 	enc.StringKey("rollup", m.Rollup)
 	enc.Float64Key("value", m.Value)
+	enc.StringKey("unit", m.Unit)
 }
 
 // IsNil checks if instance is nil
@@ -124,12 +125,14 @@ func (m *Metric) UnmarshalJSONObject(dec *gojay.Decoder, k string) error {
 	case "value":
 		return dec.Float64(&m.Value)
 
+	case "unit":
+		return dec.String(&m.Unit)
 	}
 	return nil
 }
 
 // NKeys returns the number of keys to unmarshal
-func (m *Metric) NKeys() int { return 5 }
+func (m *Metric) NKeys() int { return 6 }
 
 // MarshalJSONObject implements MarshalerJSONObject
 func (m *NodeMetrics) MarshalJSONObject(enc *gojay.Encoder) {
