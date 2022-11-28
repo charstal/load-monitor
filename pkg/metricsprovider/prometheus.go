@@ -64,6 +64,7 @@ const (
 	KubeNodeStatusCapacity PromResource = "kube_node_status_capacity"
 	NodeCpuRatio           PromResource = "instance:node_cpu:ratio"
 	NodeMemoryUtilRatio    PromResource = "instance:node_memory_utilisation:ratio"
+	NodeRunningPodCount    PromResource = "kubelet_running_pods"
 
 	NodeCpuRateSum           PromResource = "instance:node_cpu:rate:sum"
 	NodeCpuNum               PromResource = "instance:node_num_cpu:sum"
@@ -91,21 +92,26 @@ const (
 	PromSQLNodeDiskSaturation5m PromSQL = `sum by (instance) (
 		instance_device:node_disk_io_time_weighted_seconds:rate5m 
 		/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m)))`
+
+	PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
+	// need a label to confirm
+	PromSQLNodePodCountOfLabel PromSQL = "sum by(label,kubernetes_node) (kube_pod_labels)"
 )
 
 var (
 	ratioSource = []PromResource{NodeCpuRatio, NodeMemoryUtilRatio}
-	otherSql5m  = []PromResource{
+	sqlSet5m    = []PromResource{
 		PromSQLNodeDiskSaturation5m, PromSQLNodeDiskUtilRate5m, NodeCpuUtilRate5m,
 		NodeNetworkReceiveBytesExcludinglo5m, NodeNetworkReceiveDropBytesExcludinglo5m,
 		NodeNetworkTransmitBytesExcludinglo5m, NodeNetworkTransmitDropBytesExcludinglo5m,
 	}
-	otherSql = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
+	sqlSetTimes = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
+	sqlNoTime   = []PromResource{NodeRunningPodCount, PromSQLNodeThreads, PromSQLNodePodCountOfLabel}
 
 	sql2NameMap = map[string]string{
 		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
 		PromSQLNodeDiskReadUtilRate:               "node_disk_read_util_rate",
-		PromSQLNodeDiskWriteUtilRate:              "node_disk_Write_util_rate",
+		PromSQLNodeDiskWriteUtilRate:              "node_disk_write_util_rate",
 		PromSQLNodeDiskSaturation5m:               "node_disk_saturation",
 		PromSQLNodeDiskUtilRate5m:                 "node_disk_util_rate",
 		NodeCpuUtilRate5m:                         "node_cpu_util_rate",
@@ -113,6 +119,9 @@ var (
 		NodeNetworkReceiveDropBytesExcludinglo5m:  "node_network_receive_drop_bytes_excluding_lo",
 		NodeNetworkTransmitBytesExcludinglo5m:     "node_network_transmit_bytes_excluding_lo",
 		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
+		PromSQLNodeThreads:                        "node_thread_count",
+		NodeRunningPodCount:                       "node_running_pod_count",
+		PromSQLNodePodCountOfLabel:                "node_pod_count_of_label",
 	}
 )
 
@@ -259,7 +268,7 @@ func (s promClient) FetchHostMetrics(host string, window *metricstype.Window) ([
 
 func (s promClient) fetchFromSql(window *metricstype.Window, m *map[string][]metricstype.Metric) error {
 	var anyerr error
-	for _, sql := range otherSql {
+	for _, sql := range sqlSetTimes {
 		var newsql string
 		if sql == PromSQLNodeDiskTotalUtilRate {
 			newsql = fmt.Sprintf(sql, window.Duration, window.Duration)
@@ -274,14 +283,28 @@ func (s promClient) fetchFromSql(window *metricstype.Window, m *map[string][]met
 			continue
 		}
 
-		curMetricMap := s.otherSqlData2MetricMap(sql, results, "")
+		curMetricMap := s.sqlWithTime2MetricMap(sql, results, "")
 		for k, v := range curMetricMap {
 			(*m)[k] = append((*m)[k], v...)
 		}
-
 	}
+
+	for _, sql := range sqlNoTime {
+		results, err := s.getPromResults(sql)
+		if err != nil {
+			log.Errorf("error querying Prometheus for query %v: %v\n", sql, err)
+			anyerr = err
+			continue
+		}
+
+		curMetricMap := s.sqlWithNoTime2MetricMap(sql, results)
+		for k, v := range curMetricMap {
+			(*m)[k] = append((*m)[k], v...)
+		}
+	}
+
 	if window.Duration == metricstype.FiveMinutes {
-		for _, sql := range otherSql5m {
+		for _, sql := range sqlSet5m {
 			results, err := s.getPromResults(sql)
 			if err != nil {
 				log.Errorf("error querying Prometheus for query %v: %v\n", sql, err)
@@ -289,7 +312,7 @@ func (s promClient) fetchFromSql(window *metricstype.Window, m *map[string][]met
 				continue
 			}
 
-			curMetricMap := s.otherSqlData2MetricMap(sql, results, "5m")
+			curMetricMap := s.sqlWithTime2MetricMap(sql, results, "5m")
 			for k, v := range curMetricMap {
 				(*m)[k] = append((*m)[k], v...)
 			}
@@ -372,7 +395,31 @@ func (s promClient) getPromResults(promQuery string) (model.Value, error) {
 	return results, nil
 }
 
-func (s promClient) otherSqlData2MetricMap(sql string, data model.Value, rollup string) map[string][]metricstype.Metric {
+func (s promClient) sqlWithNoTime2MetricMap(sql string, data model.Value) map[string][]metricstype.Metric {
+	curMetrics := make(map[string][]metricstype.Metric)
+
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			var host, label string
+			if sql == PromSQLNodePodCountOfLabel {
+				host = string(result.Metric["kubernetes_pod"])
+				label = string(result.Metric["label"])
+			} else {
+				host = string(result.Metric["node"])
+			}
+			value := float64(result.Value)
+			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: label, Operator: metricstype.Latest, Rollup: "", Unit: metricstype.Integer, Value: value}
+
+			curMetrics[host] = append(curMetrics[host], curMetric)
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+	}
+	return curMetrics
+}
+
+func (s promClient) sqlWithTime2MetricMap(sql string, data model.Value, rollup string) map[string][]metricstype.Metric {
 	curMetrics := make(map[string][]metricstype.Metric)
 
 	switch data.(type) {
@@ -403,10 +450,15 @@ func (s promClient) nodeCapacity2MetricMap(data model.Value) map[string][]metric
 			value := float64(result.Value)
 			curMetric := metricstype.Metric{Name: KubeNodeStatusCapacity, Type: resource, Operator: operator, Rollup: "", Unit: unit, Value: value}
 			curMetrics[host] = append(curMetrics[host], curMetric)
+
+			// networkcapacity
+			networkcapcaity := metricstype.Metric{Name: "node_network", Type: metricstype.Network, Operator: operator, Rollup: "", Unit: metricstype.Bytes, Value: cfg.DiskBandwidthBytes}
+			curMetrics[host] = append(curMetrics[host], networkcapcaity)
 		}
 	default:
 		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
 	}
+
 	return curMetrics
 }
 

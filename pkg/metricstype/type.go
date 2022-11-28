@@ -21,11 +21,13 @@ const (
 	Ephemeral_storage = "ephemeral_storage"
 	Hugepages_2Mi     = "hugepages_2Mi"
 	Pods              = "pods"
+	Network           = "network"
 
 	// unit
 	Ratio   = "ratio"
 	Core    = "core"
 	Integer = "integer"
+	Bytes   = "bytes"
 )
 
 type Window struct {
