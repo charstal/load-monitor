@@ -1,4 +1,4 @@
 .idea/
 
 bin
-*.ipynb
+*.ipynb_checkpoints
