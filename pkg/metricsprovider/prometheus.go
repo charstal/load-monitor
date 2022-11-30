@@ -95,7 +95,10 @@ const (
 
 	PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
 	// need a label to confirm
-	PromSQLNodePodCountOfLabel PromSQL = "sum by(label,kubernetes_node) (kube_pod_labels)"
+
+	courseLabel                        = "course_id"
+	nodeNameLabel                      = "kubernetes_node"
+	PromSQLNodePodCountOfLabel PromSQL = "sum by(" + courseLabel + "," + nodeNameLabel + ") (kube_pod_labels)"
 )
 
 var (
@@ -403,8 +406,8 @@ func (s promClient) sqlWithNoTime2MetricMap(sql string, data model.Value) map[st
 		for _, result := range data.(model.Vector) {
 			var host, label string
 			if sql == PromSQLNodePodCountOfLabel {
-				host = string(result.Metric["kubernetes_pod"])
-				label = string(result.Metric["label"])
+				host = string(result.Metric[nodeNameLabel])
+				label = string(result.Metric[courseLabel])
 			} else {
 				host = string(result.Metric["node"])
 			}

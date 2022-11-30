@@ -2,3 +2,5 @@
 
 bin
 *.ipynb_checkpoints
+**.csv
+result
