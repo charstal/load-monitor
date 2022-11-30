@@ -4,3 +4,5 @@ bin
 *.ipynb_checkpoints
 **.csv
 result
+
+__pycache__
