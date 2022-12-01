@@ -13,7 +13,7 @@ ETCD_USER = os.environ.get("ETCD_USER", "root")
 ETCD_PASSWD = os.environ.get("ETCD_PASSWD", "Y4b5EAwMlQ")
 
 logging.info("PROMETHEUS_URL:" + PROMETHEUS_URL)
-logging.info("ETCD_HOST:" + ETCD_HOST + "ETCD_PORT" + ETCD_PORT)
+logging.info("ETCD_HOST:" + ETCD_HOST + " ETCD_PORT" + ETCD_PORT)
 
 
 LABEL_POD_INFO = "POD_INFO"

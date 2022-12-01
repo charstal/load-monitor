@@ -51,7 +51,9 @@ type PromResource = string
 type PromSQL = string
 
 const (
-	baseHealthyURL = "-/healthy"
+	baseHealthyURL      = "-/healthy"
+	EnableOpenShiftAuth = "ENABLE_OPENSHIFT_AUTH"
+	KubeConfig          = "KUBE_CONFIG"
 )
 
 const (
@@ -159,13 +161,13 @@ func NewPromClient(opts MetricsProviderOpts) (MetricsProviderClient, error) {
 	roundTripper := api.DefaultRoundTripper
 
 	// Check if EnableOpenShiftAuth is set.
-	_, enableOpenShiftAuth := os.LookupEnv(cfg.EnableOpenShiftAuth)
+	_, enableOpenShiftAuth := os.LookupEnv(EnableOpenShiftAuth)
 	if enableOpenShiftAuth {
 		// Create the config for kubernetes client
 		clusterConfig, err := rest.InClusterConfig()
 		if err != nil {
 			// Get the kubeconfig path
-			kubeConfigPath, ok := os.LookupEnv(cfg.KubeConfig)
+			kubeConfigPath, ok := os.LookupEnv(KubeConfig)
 			if !ok {
 				kubeConfigPath = cfg.DefaultKubeConfig
 			}

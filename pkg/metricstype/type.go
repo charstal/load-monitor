@@ -28,6 +28,8 @@ const (
 	Core    = "core"
 	Integer = "integer"
 	Bytes   = "bytes"
+	MiB     = "MiB"
+	M       = "m"
 )
 
 type Window struct {

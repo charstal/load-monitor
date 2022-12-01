@@ -57,3 +57,7 @@ def check_data():
     print(client.get(pod_info_md5_url))
     print(client.get(statistics_url))
     print(client.get(statistics_md5_url))
+
+
+if __name__ == "__main__":
+    check_data()

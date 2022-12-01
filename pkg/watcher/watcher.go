@@ -23,7 +23,9 @@ package watcher
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -33,6 +35,7 @@ import (
 
 	"github.com/charstal/load-monitor/pkg/metricsprovider"
 	"github.com/charstal/load-monitor/pkg/metricstype"
+	"github.com/charstal/load-monitor/pkg/statistics"
 	"github.com/francoispqt/gojay"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,30 +43,40 @@ import (
 const (
 	BaseUrl        = "/watcher"
 	HealthCheckUrl = "/watcher/healthy"
+	MertricUrl     = "/metric"
+	JobUrl         = "/job"
 )
 
 type Watcher struct {
-	mutex         sync.RWMutex // For thread safe access to cache
-	fifteenMinute []metricstype.WatcherMetrics
-	tenMinute     []metricstype.WatcherMetrics
-	fiveMinute    []metricstype.WatcherMetrics
-	cacheSize     int
-	client        metricsprovider.MetricsProviderClient
-	isStarted     bool // Indicates if the Watcher is started by calling StartWatching()
-	shutdown      chan os.Signal
+	mutex            sync.RWMutex // For thread safe access to cache
+	fifteenMinute    []metricstype.WatcherMetrics
+	tenMinute        []metricstype.WatcherMetrics
+	fiveMinute       []metricstype.WatcherMetrics
+	cacheSize        int
+	client           metricsprovider.MetricsProviderClient
+	isStarted        bool // Indicates if the Watcher is started by calling StartWatching()
+	shutdown         chan os.Signal
+	statisticsReader *statistics.OfflineReader
 }
 
 // NewWatcher Returns a new initialised Watcher
 func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 	sizePerWindow := 5
+
+	statistics, err := statistics.NewOfflineReader()
+	if err != nil {
+		panic("statistic init error")
+	}
+
 	return &Watcher{
-		mutex:         sync.RWMutex{},
-		fifteenMinute: make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		tenMinute:     make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		fiveMinute:    make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		cacheSize:     sizePerWindow,
-		client:        client,
-		shutdown:      make(chan os.Signal, 1),
+		mutex:            sync.RWMutex{},
+		fifteenMinute:    make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		tenMinute:        make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		fiveMinute:       make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		cacheSize:        sizePerWindow,
+		client:           client,
+		shutdown:         make(chan os.Signal, 1),
+		statisticsReader: statistics,
 	}
 }
 
@@ -99,6 +112,9 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 		}
 	}
 
+	// fetch statistic
+	w.statisticsReader.Update()
+
 	durations := [3]string{metricstype.FifteenMinutes, metricstype.TenMinutes, metricstype.FiveMinutes}
 	for _, duration := range durations {
 		// Populate cache initially before returning
@@ -108,6 +124,9 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 
 	http.HandleFunc(BaseUrl, w.handler)
 	http.HandleFunc(HealthCheckUrl, w.healthCheckHandler)
+	http.HandleFunc(JobUrl, w.jobFinishedHandler)
+	http.HandleFunc(MertricUrl, w.metricHandler)
+
 	server := &http.Server{
 		Addr:    ":2020",
 		Handler: http.DefaultServeMux,
@@ -258,6 +277,76 @@ func (w *Watcher) handler(resp http.ResponseWriter, r *http.Request) {
 func (w *Watcher) healthCheckHandler(resp http.ResponseWriter, r *http.Request) {
 	if status, err := w.client.Healthy(); status != 0 {
 		log.Warnf("health check failed with: %v", err)
+		resp.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	resp.WriteHeader(http.StatusOK)
+}
+
+// Simple server status handler
+func (w *Watcher) metricHandler(resp http.ResponseWriter, r *http.Request) {
+	resp.Header().Set("Content-Type", "application/json")
+
+	metrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
+	if metrics == nil {
+		if err != nil {
+			resp.WriteHeader(http.StatusInternalServerError)
+			log.Error(err)
+			return
+		}
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	host := r.URL.Query().Get("host")
+	var bytes []byte
+	if host != "" {
+		if _, ok := metrics.Data.NodeMetricsMap[host]; ok {
+			hostMetricsData := make(map[string]metricstype.NodeMetrics)
+			hostMetricsData[host] = metrics.Data.NodeMetricsMap[host]
+			hostMetrics := metricstype.WatcherMetrics{Timestamp: metrics.Timestamp,
+				Window: metrics.Window,
+				Source: metrics.Source,
+				Data:   metricstype.Data{NodeMetricsMap: hostMetricsData},
+			}
+			bytes, err = gojay.MarshalJSONObject(&hostMetrics)
+		} else {
+			resp.WriteHeader(http.StatusNotFound)
+			return
+		}
+	} else {
+		bytes, err = gojay.MarshalJSONObject(metrics)
+	}
+
+	if err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = resp.Write(bytes)
+	if err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+type JobRequest struct {
+	FilePath string `json:"file_path"`
+	MD5      string `json:"md5"`
+}
+
+// Simple server status handler
+func (w *Watcher) jobFinishedHandler(resp http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	var req JobRequest
+	log.Info("job finshed")
+	if err := json.Unmarshal(body, &req); err == nil {
+		// fmt.Printf("%v", req)
+		resp.Write([]byte("Please add filepath and md5"))
+	}
+	if err := w.statisticsReader.Update(); err != nil {
+		log.Warnf("job fail: %v", err)
 		resp.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}

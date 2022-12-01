@@ -6,3 +6,4 @@ bin
 result
 
 **/__pycache__
+.VSCodeCounter

@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"os"
 
-	cfg "github.com/charstal/load-monitor/pkg/config"
 	"github.com/charstal/load-monitor/pkg/metricstype"
 
 	log "github.com/sirupsen/logrus"
@@ -43,7 +42,7 @@ const ()
 
 func init() {
 	var ok bool
-	kubeConfigPath, ok = os.LookupEnv(cfg.KubeConfig)
+	kubeConfigPath, ok = os.LookupEnv(KubeConfig)
 	if ok {
 		kubeConfigPresent = true
 	}
