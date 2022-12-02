@@ -54,10 +54,11 @@ type Data struct {
 }
 
 type WatcherMetrics struct {
-	Timestamp int64  `json:"timestamp"`
-	Window    Window `json:"window"`
-	Source    string `json:"source"`
-	Data      Data   `json:"data"`
+	Timestamp  int64  `json:"timestamp"`
+	Window     Window `json:"window"`
+	Source     string `json:"source"`
+	Data       Data   `json:"data"`
+	Statistics Data   `json:"statistics"`
 }
 
 type Tags struct {

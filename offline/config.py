@@ -23,4 +23,4 @@ LABEL_FILEMD5 = "MD5"
 
 
 LOAD_MONITOR_JOB_URL = os.environ.get(
-    "LOAD_MONITOR_JOB_URL", "localhost:2020/job")
+    "LOAD_MONITOR_JOB_URL", "http://localhost:2020/job")

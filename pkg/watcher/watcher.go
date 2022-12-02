@@ -22,29 +22,14 @@ This also uses a fast json parser
 package watcher
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"io/ioutil"
-	"net/http"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/charstal/load-monitor/pkg/metricsprovider"
 	"github.com/charstal/load-monitor/pkg/metricstype"
 	"github.com/charstal/load-monitor/pkg/statistics"
-	"github.com/francoispqt/gojay"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	BaseUrl        = "/watcher"
-	HealthCheckUrl = "/watcher/healthy"
-	MertricUrl     = "/metric"
-	JobUrl         = "/job"
 )
 
 type Watcher struct {
@@ -63,6 +48,7 @@ type Watcher struct {
 func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 	sizePerWindow := 5
 
+	// init statistics offline reader
 	statistics, err := statistics.NewOfflineReader()
 	if err != nil {
 		panic("statistic init error")
@@ -100,7 +86,8 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 		log.Debugf("fetched metrics for window: %v", curWindow)
 
 		// TODO： add tags, etc.
-		watcherMetrics := metricMapToWatcherMetrics(hostMetrics, w.client.Name(), *curWindow)
+
+		watcherMetrics := metricMapToWatcherMetrics(hostMetrics, w.statisticsReader.GetMetrics(), w.client.Name(), *curWindow)
 		w.appendWatcherMetrics(metric, &watcherMetrics)
 	}
 
@@ -121,58 +108,13 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 		fetchOnce(duration)
 		go windowWatcher(duration)
 	}
-
-	http.HandleFunc(BaseUrl, w.handler)
-	http.HandleFunc(HealthCheckUrl, w.healthCheckHandler)
-	http.HandleFunc(JobUrl, w.jobFinishedHandler)
-	http.HandleFunc(MertricUrl, w.metricHandler)
-
-	server := &http.Server{
-		Addr:    ":2020",
-		Handler: http.DefaultServeMux,
-	}
-
-	go func() {
-		log.Warn(server.ListenAndServe())
-	}()
-
-	signal.Notify(w.shutdown, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-w.shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := server.Shutdown(ctx); err != nil {
-			log.Errorf("Unable to shutdown server: %v", err)
-		}
-		shutdown <- struct{}{}
-	}()
+	// start http server
+	w.startHttpServer(shutdown)
 
 	w.mutex.Lock()
 	w.isStarted = true
 	w.mutex.Unlock()
 	log.Info("Started watching metrics")
-}
-
-// GetLatestWatcherMetrics It starts from 15 minute window, and falls back to 10 min, 5 min windows subsequently
-// if metrics are not present. StartWatching() should be called before calling this.
-func (w *Watcher) GetLatestWatcherMetrics(duration string) (*metricstype.WatcherMetrics, error) {
-	w.mutex.RLock()
-	defer w.mutex.RUnlock()
-	if !w.isStarted {
-		return nil, errors.New("need to call StartWatching() first")
-	}
-
-	switch {
-	case duration == metricstype.FifteenMinutes && len(w.fifteenMinute) > 0:
-		return w.deepCopyWatcherMetrics(&w.fifteenMinute[len(w.fifteenMinute)-1]), nil
-	case (duration == metricstype.FifteenMinutes || duration == metricstype.TenMinutes) && len(w.tenMinute) > 0:
-		return w.deepCopyWatcherMetrics(&w.tenMinute[len(w.tenMinute)-1]), nil
-	case (duration == metricstype.TenMinutes || duration == metricstype.FiveMinutes) && len(w.fiveMinute) > 0:
-		return w.deepCopyWatcherMetrics(&w.fiveMinute[len(w.fiveMinute)-1]), nil
-	default:
-		return nil, errors.New("unable to get any latest metrics")
-	}
 }
 
 func (w *Watcher) getCurrentWindow(duration string) (*metricstype.Window, *[]metricstype.WatcherMetrics) {
@@ -190,7 +132,7 @@ func (w *Watcher) getCurrentWindow(duration string) (*metricstype.Window, *[]met
 		watcherMetrics = &w.fiveMinute
 	default:
 		log.Error("received unexpected window duration, defaulting to 15m")
-		curWindow = metricstype.CurrentFifteenMinuteWindow()
+		curWindow = metricstype.CurrentFiveMinuteWindow()
 	}
 	return curWindow, watcherMetrics
 }
@@ -215,6 +157,18 @@ func (w *Watcher) deepCopyWatcherMetrics(src *metricstype.WatcherMetrics) *metri
 		nodeMetric.Metadata = fetchedMetric.Metadata
 		nodeMetricsMap[host] = nodeMetric
 	}
+
+	statisticMetricsMap := make(map[string]metricstype.NodeMetrics)
+	for host, fetchedMetric := range src.Statistics.NodeMetricsMap {
+		nodeMetric := metricstype.NodeMetrics{
+			Metrics: make([]metricstype.Metric, len(fetchedMetric.Metrics)),
+			Tags:    fetchedMetric.Tags,
+		}
+		copy(nodeMetric.Metrics, fetchedMetric.Metrics)
+		nodeMetric.Metadata = fetchedMetric.Metadata
+		statisticMetricsMap[host] = nodeMetric
+	}
+
 	return &metricstype.WatcherMetrics{
 		Timestamp: src.Timestamp,
 		Window:    src.Window,
@@ -222,140 +176,15 @@ func (w *Watcher) deepCopyWatcherMetrics(src *metricstype.WatcherMetrics) *metri
 		Data: metricstype.Data{
 			NodeMetricsMap: nodeMetricsMap,
 		},
+		Statistics: metricstype.Data{
+			NodeMetricsMap: statisticMetricsMap,
+		},
 	}
-}
-
-// HTTP Handler for BaseUrl endpoint
-func (w *Watcher) handler(resp http.ResponseWriter, r *http.Request) {
-	resp.Header().Set("Content-Type", "application/json")
-
-	metrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
-	if metrics == nil {
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			log.Error(err)
-			return
-		}
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	host := r.URL.Query().Get("host")
-	var bytes []byte
-	if host != "" {
-		if _, ok := metrics.Data.NodeMetricsMap[host]; ok {
-			hostMetricsData := make(map[string]metricstype.NodeMetrics)
-			hostMetricsData[host] = metrics.Data.NodeMetricsMap[host]
-			hostMetrics := metricstype.WatcherMetrics{Timestamp: metrics.Timestamp,
-				Window: metrics.Window,
-				Source: metrics.Source,
-				Data:   metricstype.Data{NodeMetricsMap: hostMetricsData},
-			}
-			bytes, err = gojay.MarshalJSONObject(&hostMetrics)
-		} else {
-			resp.WriteHeader(http.StatusNotFound)
-			return
-		}
-	} else {
-		bytes, err = gojay.MarshalJSONObject(metrics)
-	}
-
-	if err != nil {
-		log.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	_, err = resp.Write(bytes)
-	if err != nil {
-		log.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-// Simple server status handler
-func (w *Watcher) healthCheckHandler(resp http.ResponseWriter, r *http.Request) {
-	if status, err := w.client.Healthy(); status != 0 {
-		log.Warnf("health check failed with: %v", err)
-		resp.WriteHeader(http.StatusServiceUnavailable)
-		return
-	}
-	resp.WriteHeader(http.StatusOK)
-}
-
-// Simple server status handler
-func (w *Watcher) metricHandler(resp http.ResponseWriter, r *http.Request) {
-	resp.Header().Set("Content-Type", "application/json")
-
-	metrics, err := w.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
-	if metrics == nil {
-		if err != nil {
-			resp.WriteHeader(http.StatusInternalServerError)
-			log.Error(err)
-			return
-		}
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	host := r.URL.Query().Get("host")
-	var bytes []byte
-	if host != "" {
-		if _, ok := metrics.Data.NodeMetricsMap[host]; ok {
-			hostMetricsData := make(map[string]metricstype.NodeMetrics)
-			hostMetricsData[host] = metrics.Data.NodeMetricsMap[host]
-			hostMetrics := metricstype.WatcherMetrics{Timestamp: metrics.Timestamp,
-				Window: metrics.Window,
-				Source: metrics.Source,
-				Data:   metricstype.Data{NodeMetricsMap: hostMetricsData},
-			}
-			bytes, err = gojay.MarshalJSONObject(&hostMetrics)
-		} else {
-			resp.WriteHeader(http.StatusNotFound)
-			return
-		}
-	} else {
-		bytes, err = gojay.MarshalJSONObject(metrics)
-	}
-
-	if err != nil {
-		log.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	_, err = resp.Write(bytes)
-	if err != nil {
-		log.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-type JobRequest struct {
-	FilePath string `json:"file_path"`
-	MD5      string `json:"md5"`
-}
-
-// Simple server status handler
-func (w *Watcher) jobFinishedHandler(resp http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
-	var req JobRequest
-	log.Info("job finshed")
-	if err := json.Unmarshal(body, &req); err == nil {
-		// fmt.Printf("%v", req)
-		resp.Write([]byte("Please add filepath and md5"))
-	}
-	if err := w.statisticsReader.Update(); err != nil {
-		log.Warnf("job fail: %v", err)
-		resp.WriteHeader(http.StatusServiceUnavailable)
-		return
-	}
-	resp.WriteHeader(http.StatusOK)
 }
 
 // Utility functions
 
-func metricMapToWatcherMetrics(metricMap map[string][]metricstype.Metric, clientName string, window metricstype.Window) metricstype.WatcherMetrics {
+func metricMapToWatcherMetrics(metricMap map[string][]metricstype.Metric, statistics *map[string][]metricstype.Metric, clientName string, window metricstype.Window) metricstype.WatcherMetrics {
 	metricsMap := make(map[string]metricstype.NodeMetrics)
 	for host, metricList := range metricMap {
 		nodeMetric := metricstype.NodeMetrics{
@@ -365,10 +194,24 @@ func metricMapToWatcherMetrics(metricMap map[string][]metricstype.Metric, client
 		metricsMap[host] = nodeMetric
 	}
 
-	watcherMetrics := metricstype.WatcherMetrics{Timestamp: time.Now().Unix(),
-		Data:   metricstype.Data{NodeMetricsMap: metricsMap},
-		Source: clientName,
-		Window: window,
+	statisticsMap := make(map[string]metricstype.NodeMetrics)
+	if statistics != nil {
+		for host, metricList := range *statistics {
+			nodeMetric := metricstype.NodeMetrics{
+				Metrics: make([]metricstype.Metric, len(metricList)),
+			}
+			copy(nodeMetric.Metrics, metricList)
+			statisticsMap[host] = nodeMetric
+		}
 	}
+
+	watcherMetrics := metricstype.WatcherMetrics{
+		Timestamp:  time.Now().Unix(),
+		Data:       metricstype.Data{NodeMetricsMap: metricsMap},
+		Source:     clientName,
+		Window:     window,
+		Statistics: metricstype.Data{NodeMetricsMap: statisticsMap},
+	}
+	// fmt.Printf("%v", watcherMetrics)
 	return watcherMetrics
 }

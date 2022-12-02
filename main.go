@@ -36,15 +36,6 @@ func init() {
 }
 
 func main() {
-	// client, err := api.NewLibraryClient(watcher.EnvMetricProviderOpts)
-	// if err != nil {
-	// 	log.Fatalf("unable to create client: %v", err)
-	// }
-	// metrics, err := client.GetLatestWatcherMetrics()
-	// if err != nil {
-	// 	log.Errorf("unable to get watcher metrics: %v", err)
-	// }
-	// log.Debugf("received metrics: %v", metrics)
 
 	ch := make(chan struct{}, 1)
 

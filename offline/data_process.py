@@ -19,6 +19,10 @@ pod_info_csv = "pod_info.csv"
 statistics_csv = "statistics.csv"
 
 
+if not os.path.exists(result_dir):
+    os.makedirs(result_dir)
+
+
 def range_data_query(sql):
     logging.info("query: " + sql)
     data = prom.custom_query(sql)

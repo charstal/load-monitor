@@ -21,9 +21,10 @@ import (
 type OfflineReader struct {
 	// etcd client
 	client         clientv3.Client
-	basePath       string
+	remoteBasePath string
 	remoteFilePath string
 	remoteFileMD5  string
+	localBasePath  string
 	localFilePath  string
 	localFileMD5   string
 	tmpFilePath    string
@@ -39,16 +40,17 @@ const (
 	EtcdUrlKey       = "ETCD_URL"
 	EtcdUsernameKey  = "ETCD_USERNAME"
 	EtcdPasswdKey    = "ETCD_PASSWD"
-	BaseDirKey       = "NFS_BASE_DIR"
+	RemoteBaseDirKey = "REMOTE_BASE_DIR"
 
 	tmpFilePrefix = "tmp-"
 )
 
 var (
-	etcdUrl      string
-	etcdUsername string
-	etcdPasswd   string
-	baseDir      string
+	etcdUrl       string
+	etcdUsername  string
+	etcdPasswd    string
+	remoteBaseDir string
+	localBaseDir  string
 )
 
 func NewOfflineReader() (*OfflineReader, error) {
@@ -65,9 +67,18 @@ func NewOfflineReader() (*OfflineReader, error) {
 	if !ok {
 		etcdPasswd = cfg.DefaultETCDPasswd
 	}
-	baseDir, ok = os.LookupEnv(BaseDirKey)
+	remoteBaseDir, ok = os.LookupEnv(RemoteBaseDirKey)
 	if !ok {
-		baseDir = cfg.DefaultSourceBaseDir
+		remoteBaseDir = cfg.DefaultRemoteBaseDir
+	}
+	localBaseDir, ok = os.LookupEnv(RemoteBaseDirKey)
+	if !ok {
+		localBaseDir = cfg.DefaultLocalBaseDir
+	}
+
+	_, err := os.Stat(localBaseDir)
+	if os.IsNotExist(err) {
+		os.Mkdir(localBaseDir, 0777)
 	}
 
 	etcdClient, err := clientv3.New(clientv3.Config{
@@ -84,8 +95,9 @@ func NewOfflineReader() (*OfflineReader, error) {
 	// fmt.Printf("%s", fileMd5)
 
 	offlineReader := OfflineReader{
-		client:   *etcdClient,
-		basePath: baseDir,
+		client:         *etcdClient,
+		remoteBasePath: remoteBaseDir,
+		localBasePath:  localBaseDir,
 	}
 
 	// offlineReader.Update()
@@ -126,7 +138,7 @@ func (or *OfflineReader) pullFromEtcd() error {
 		return err
 	}
 
-	filePath = filepath.Join(baseDir, filePath)
+	filePath = filepath.Join(or.remoteBasePath, filePath)
 	// fmt.Printf("%s", filePath)
 	res, err = or.client.Get(ctx, statisticsMD5Url)
 	fileMd5 := string(res.Kvs[0].Value)
@@ -148,13 +160,13 @@ func (or *OfflineReader) fetchStatisticsFile() error {
 	fileName := filepath.Base(sourceFile)
 
 	desFileName := tmpFilePrefix + fileName
-	desPath := desFileName
+	desPath := filepath.Join(localBaseDir, desFileName)
 	err := util.CopyFile(sourceFile, desPath)
 	if err != nil {
 		return err
 	}
 
-	or.tmpFilePath = desFileName
+	or.tmpFilePath = desPath
 	or.tmpFileMD5 = or.remoteFileMD5
 
 	return nil
@@ -193,7 +205,9 @@ func (or *OfflineReader) transferTmpFile2LocalFile() error {
 	}
 
 	if res {
-		newPath := strings.TrimPrefix(filePath, tmpFilePrefix)
+		fileName := filepath.Base(filePath)
+		newFileName := strings.TrimPrefix(fileName, tmpFilePrefix)
+		newPath := filepath.Join(or.localBasePath, newFileName)
 		util.RenameFile(filePath, newPath)
 		or.localFileMD5 = fileMd5
 		or.localFilePath = newPath

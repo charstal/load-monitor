@@ -1,12 +1,50 @@
-package main
+package storage
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
+	cfg "github.com/charstal/load-monitor/pkg/config"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
+
+type Storage struct {
+	client *influxdb2.Client
+}
+
+const (
+	InfluxDBUrlKey   = "INFLUXDB_URL"
+	InfluxDBTokenKey = "INFLUXDB_TOKEN"
+	InfluxDBOrgKey   = "INFLUXDB_ORG"
+)
+
+var (
+	influxUrl   string
+	influxToken string
+	influxOrg   string
+)
+
+func NewStorage() (*Storage, error) {
+	var ok bool
+	influxUrl, ok = os.LookupEnv(InfluxDBUrlKey)
+	if !ok {
+		influxUrl = cfg.DefaultInfluxURL
+	}
+	influxToken, ok = os.LookupEnv(InfluxDBTokenKey)
+	if !ok {
+		influxToken = cfg.DefaultInfluxToken
+	}
+	influxOrg, ok = os.LookupEnv(InfluxDBOrgKey)
+	if !ok {
+		influxOrg = cfg.DefaultInfluxOrg
+	}
+
+	client := influxdb2.NewClient(influxUrl, influxToken)
+
+	return &Storage{client: &client}, nil
+}
 
 func main() {
 	// Create a new client using an InfluxDB server base URL and an authentication token

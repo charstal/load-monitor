@@ -229,6 +229,7 @@ func (m *WatcherMetrics) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.ObjectKey("window", &m.Window)
 	enc.StringKey("source", m.Source)
 	enc.ObjectKey("data", &m.Data)
+	enc.ObjectKey("statistics", &m.Statistics)
 }
 
 // IsNil checks if instance is nil
@@ -255,13 +256,16 @@ func (m *WatcherMetrics) UnmarshalJSONObject(dec *gojay.Decoder, k string) error
 		err := dec.Object(&m.Data)
 
 		return err
+	case "statistics":
+		err := dec.Object(&m.Statistics)
 
+		return err
 	}
 	return nil
 }
 
 // NKeys returns the number of keys to unmarshal
-func (m *WatcherMetrics) NKeys() int { return 4 }
+func (m *WatcherMetrics) NKeys() int { return 5 }
 
 // MarshalJSONObject implements MarshalerJSONObject
 func (w *Window) MarshalJSONObject(enc *gojay.Encoder) {

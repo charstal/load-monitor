@@ -41,6 +41,10 @@ func RenameFile(src string, des string) error {
 	if err != nil {
 		return err
 	}
+	err = os.Remove(src)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -14,8 +14,14 @@ const (
 	DefaultPromAddress    = "http://prometheus-k8s:9090"
 	DefaultPromhealthyURL = "-/healthy"
 
-	DefaultETCDURL       = "10.214.241.226:32379"
-	DefaultETCDUsername  = "root"
-	DefaultETCDPasswd    = "Y4b5EAwMlQ"
-	DefaultSourceBaseDir = "offline"
+	DefaultETCDURL      = "10.214.241.226:32379"
+	DefaultETCDUsername = "root"
+	DefaultETCDPasswd   = "Y4b5EAwMlQ"
+
+	DefaultRemoteBaseDir = "../offline"
+	DefaultLocalBaseDir  = "statistics"
+
+	DefaultInfluxURL   = "http://10.72.100.7:8086/"
+	DefaultInfluxToken = "lVnogqXxfgpSOeQ7EledUAF6_luxl5NtvVv1YJg5CaTkgcUB-2dvPK_Royv1E_g37y81HhjehudrCR64Ri4nBw=="
+	DefaultInfluxOrg   = "mo"
 )

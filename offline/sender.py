@@ -35,15 +35,12 @@ def send_finish_to_load_monitor(data_dict):
     ok = False
     while i < 4:
         try:
-            res = requests.post(url=LOAD_MONITOR_JOB_URL, data=data_dict)
-            if res.ok():
-                ok = True
-                break
+            requests.get(url=LOAD_MONITOR_JOB_URL, data=data_dict)
+            break
         except:
             logging.info("trying to send" + str(i) + " times")
-
-        i = i + 1
-    if ok:
+            i = i + 1
+    if i < 4:
         logging.info("sended to load monitor")
     else:
         logging.info("cannot send to load monitor")
