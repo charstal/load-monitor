@@ -9,7 +9,8 @@ logging.info("promtheus address:" + PROMETHEUS_URL)
 prom = PrometheusConnect(url=PROMETHEUS_URL, disable_ssl=True)
 
 
-# Todo need change label
+# Todo(label)
+# need change label
 course_label = "instance"
 node_label = "kubernetes_node"
 
@@ -76,15 +77,17 @@ def to_file(data_total_dict):
     file_path_dict = {}
     data = pd.DataFrame(data_total_dict)
     data = data.T
-    p = os.path.join(result_dir, time + "-" + pod_info_csv)
-    file_path_dict[LABEL_POD_INFO] = {LABEL_FILENAME: p}
+    newfileName = time + "-" + pod_info_csv
+    p = os.path.join(result_dir, newfileName)
+    file_path_dict[LABEL_POD_INFO] = {LABEL_FILENAME: newfileName}
     data.to_csv(p)
 
     statistics_label = ["cpu_std/m", "cpu_avg/m", "mem_std/MiB", "mem_avg/MiB"]
     new_data = data.groupby(data["label"])[statistics_label].mean()
     new_data.loc["all"] = data[statistics_label].mean()
-    p = os.path.join(result_dir, time + "-" + statistics_csv)
-    file_path_dict[LABEL_STATISTICS] = {LABEL_FILENAME: p}
+    newfileName = time + "-" + statistics_csv
+    p = os.path.join(result_dir, newfileName)
+    file_path_dict[LABEL_STATISTICS] = {LABEL_FILENAME: newfileName}
     new_data.to_csv(p)
 
     return file_path_dict

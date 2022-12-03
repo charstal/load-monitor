@@ -36,13 +36,13 @@ type OfflineReader struct {
 const (
 	// podInfoUrl       = "/metric/pod_info_path"
 	// podInfoMD5Url    = "/metric/pod_info_md5"
-	statisticsUrl    = "/metric/statistics_path"
-	statisticsMD5Url = "/metric/statistics_path_md5"
-	EtcdUrlKey       = "ETCD_URL"
-	EtcdUsernameKey  = "ETCD_USERNAME"
-	EtcdPasswdKey    = "ETCD_PASSWD"
-	RemoteBaseDirKey = "REMOTE_BASE_DIR"
-	LocalBaseDirKey  = "LOCAL_BASE_DIR"
+	statisticsUrlKey    = "/metric/statistics_path"
+	statisticsMD5UrlKey = "/metric/statistics_path_md5"
+	EtcdUrlKey          = "ETCD_URL"
+	EtcdUsernameKey     = "ETCD_USERNAME"
+	EtcdPasswdKey       = "ETCD_PASSWD"
+	RemoteBaseDirKey    = "REMOTE_BASE_DIR"
+	LocalBaseDirKey     = "LOCAL_BASE_DIR"
 
 	tmpFilePrefix = "tmp-"
 )
@@ -138,7 +138,7 @@ func (or *OfflineReader) GetMetrics() *map[string][]metricstype.Metric {
 
 func (or *OfflineReader) pullFromEtcd() error {
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	res, err := or.client.Get(ctx, statisticsUrl)
+	res, err := or.client.Get(ctx, statisticsUrlKey)
 	if len(res.Kvs) == 0 {
 		log.Debug("statistics url empty")
 		return nil
@@ -150,7 +150,7 @@ func (or *OfflineReader) pullFromEtcd() error {
 
 	filePath = filepath.Join(or.remoteBasePath, filePath)
 	// fmt.Printf("%s", filePath)
-	res, err = or.client.Get(ctx, statisticsMD5Url)
+	res, err = or.client.Get(ctx, statisticsMD5UrlKey)
 	if len(res.Kvs) == 0 {
 		log.Debug("statistics md5 empty")
 		return nil

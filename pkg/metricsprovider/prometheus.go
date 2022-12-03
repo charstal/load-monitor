@@ -97,7 +97,7 @@ const (
 
 	PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
 	// need a label to confirm
-
+	// Todo(label)
 	courseLabel                        = "course_id"
 	nodeNameLabel                      = "kubernetes_node"
 	PromSQLNodePodCountOfLabel PromSQL = "sum by(" + courseLabel + "," + nodeNameLabel + ") (kube_pod_labels)"
