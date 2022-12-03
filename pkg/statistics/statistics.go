@@ -15,6 +15,7 @@ import (
 	cfg "github.com/charstal/load-monitor/pkg/config"
 	"github.com/charstal/load-monitor/pkg/metricstype"
 	"github.com/charstal/load-monitor/pkg/util"
+	log "github.com/sirupsen/logrus"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -41,6 +42,7 @@ const (
 	EtcdUsernameKey  = "ETCD_USERNAME"
 	EtcdPasswdKey    = "ETCD_PASSWD"
 	RemoteBaseDirKey = "REMOTE_BASE_DIR"
+	LocalBaseDirKey  = "LOCAL_BASE_DIR"
 
 	tmpFilePrefix = "tmp-"
 )
@@ -71,14 +73,18 @@ func NewOfflineReader() (*OfflineReader, error) {
 	if !ok {
 		remoteBaseDir = cfg.DefaultRemoteBaseDir
 	}
-	localBaseDir, ok = os.LookupEnv(RemoteBaseDirKey)
+	localBaseDir, ok = os.LookupEnv(LocalBaseDirKey)
 	if !ok {
 		localBaseDir = cfg.DefaultLocalBaseDir
 	}
 
 	_, err := os.Stat(localBaseDir)
 	if os.IsNotExist(err) {
-		os.Mkdir(localBaseDir, 0777)
+		err := os.Mkdir(localBaseDir, 0777)
+		if err != nil {
+			log.Error("cannot create %v", err)
+		}
+
 	}
 
 	etcdClient, err := clientv3.New(clientv3.Config{
@@ -133,6 +139,10 @@ func (or *OfflineReader) GetMetrics() *map[string][]metricstype.Metric {
 func (or *OfflineReader) pullFromEtcd() error {
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	res, err := or.client.Get(ctx, statisticsUrl)
+	if len(res.Kvs) == 0 {
+		log.Debug("statistics url empty")
+		return nil
+	}
 	filePath := string(res.Kvs[0].Value)
 	if err != nil {
 		return err
@@ -141,6 +151,10 @@ func (or *OfflineReader) pullFromEtcd() error {
 	filePath = filepath.Join(or.remoteBasePath, filePath)
 	// fmt.Printf("%s", filePath)
 	res, err = or.client.Get(ctx, statisticsMD5Url)
+	if len(res.Kvs) == 0 {
+		log.Debug("statistics md5 empty")
+		return nil
+	}
 	fileMd5 := string(res.Kvs[0].Value)
 	if err != nil {
 		return err
@@ -155,7 +169,8 @@ func (or *OfflineReader) pullFromEtcd() error {
 func (or *OfflineReader) fetchStatisticsFile() error {
 	sourceFile := or.remoteFilePath
 	if len(sourceFile) == 0 {
-		return errors.New("sourceFile empty")
+		log.Debug("fetchStatisticsFile: sourceFile empty")
+		return nil
 	}
 	fileName := filepath.Base(sourceFile)
 
@@ -190,7 +205,8 @@ func (or *OfflineReader) transferTmpFile2LocalFile() error {
 	var err error = nil
 	filePath := or.tmpFilePath
 	fileMd5 := or.tmpFileMD5
-	if len(filePath) == 0 {
+	if len(filePath) == 0 || len(fileMd5) == 0 {
+		log.Debug("transferTmpFile2LocalFile: sourceFile empty")
 		return nil
 	}
 	// same
@@ -223,6 +239,11 @@ func (or *OfflineReader) transferTmpFile2LocalFile() error {
 
 func (or *OfflineReader) readFromCsv() error {
 	filePath := or.localFilePath
+
+	if len(filePath) == 0 {
+		log.Debug("readFromCsv: sourceFile empty")
+		return nil
+	}
 
 	file, err := os.Open(filePath)
 	if err != nil {

@@ -26,3 +26,10 @@ build:
 .PHONY: clean
 clean:
 	rm -rf ./bin
+
+image:
+	docker build -t load-monitor:v0.0.1 .
+
+remote: image
+	docker tag load-monitor:v0.0.1 registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v0.0.1
+	docker push registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v0.0.1

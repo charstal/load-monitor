@@ -29,6 +29,7 @@ import (
 	"github.com/charstal/load-monitor/pkg/metricsprovider"
 	"github.com/charstal/load-monitor/pkg/metricstype"
 	"github.com/charstal/load-monitor/pkg/statistics"
+	"github.com/charstal/load-monitor/pkg/storage"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,6 +43,7 @@ type Watcher struct {
 	isStarted        bool // Indicates if the Watcher is started by calling StartWatching()
 	shutdown         chan os.Signal
 	statisticsReader *statistics.OfflineReader
+	storage          *storage.Storage
 }
 
 // NewWatcher Returns a new initialised Watcher
@@ -54,6 +56,11 @@ func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 		panic("statistic init error")
 	}
 
+	storage, err := storage.NewStorage()
+	if err != nil {
+		panic("storage init error")
+	}
+
 	return &Watcher{
 		mutex:            sync.RWMutex{},
 		fifteenMinute:    make([]metricstype.WatcherMetrics, 0, sizePerWindow),
@@ -63,6 +70,7 @@ func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 		client:           client,
 		shutdown:         make(chan os.Signal, 1),
 		statisticsReader: statistics,
+		storage:          storage,
 	}
 }
 
@@ -101,6 +109,8 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 
 	// fetch statistic
 	w.statisticsReader.Update()
+
+	// w.storage.Test()
 
 	durations := [3]string{metricstype.FifteenMinutes, metricstype.TenMinutes, metricstype.FiveMinutes}
 	for _, duration := range durations {

@@ -11,17 +11,17 @@ const (
 	// env variable that provides path to kube config file, if deploying from outside K8s cluster
 
 	DefaultKubeConfig     = "~/.kube/config"
-	DefaultPromAddress    = "http://prometheus-k8s:9090"
+	DefaultPromAddress    = "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
 	DefaultPromhealthyURL = "-/healthy"
 
-	DefaultETCDURL      = "10.214.241.226:32379"
+	DefaultETCDURL      = "etcd-dev.default.svc.cluster.local:2379"
 	DefaultETCDUsername = "root"
-	DefaultETCDPasswd   = "Y4b5EAwMlQ"
+	DefaultETCDPasswd   = "CrHkL98Ryr"
 
-	DefaultRemoteBaseDir = "../offline"
+	DefaultRemoteBaseDir = "offline"
 	DefaultLocalBaseDir  = "statistics"
 
-	DefaultInfluxURL   = "http://10.72.100.7:8086/"
-	DefaultInfluxToken = "lVnogqXxfgpSOeQ7EledUAF6_luxl5NtvVv1YJg5CaTkgcUB-2dvPK_Royv1E_g37y81HhjehudrCR64Ri4nBw=="
+	DefaultInfluxURL   = "http://192.168.122.67:8086"
+	DefaultInfluxToken = "YEkyUh-YUJ6pfV3Tf996_uHQan_szSihhTxdgxGf9HDMxQ2AXin5UqXN7EoKeHDaM9p12yKOngeD-OrbKf0zTA=="
 	DefaultInfluxOrg   = "mo"
 )

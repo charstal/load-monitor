@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.17
 WORKDIR /go/src/github.com/charstal/load-monitor
 COPY . .
 RUN go env -w GO111MODULE=on

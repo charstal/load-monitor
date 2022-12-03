@@ -11,7 +11,7 @@ import (
 )
 
 type Storage struct {
-	client *influxdb2.Client
+	client influxdb2.Client
 }
 
 const (
@@ -43,14 +43,13 @@ func NewStorage() (*Storage, error) {
 
 	client := influxdb2.NewClient(influxUrl, influxToken)
 
-	return &Storage{client: &client}, nil
+	return &Storage{client: client}, nil
 }
 
-func main() {
-	// Create a new client using an InfluxDB server base URL and an authentication token
-	client := influxdb2.NewClient("http://10.72.100.7:8086/", "lVnogqXxfgpSOeQ7EledUAF6_luxl5NtvVv1YJg5CaTkgcUB-2dvPK_Royv1E_g37y81HhjehudrCR64Ri4nBw==")
-	// Use blocking write client for writes to desired bucket
-	writeAPI := client.WriteAPIBlocking("mo", "test")
+func (s *Storage) test() {
+	// fmt.Println(influxOrg)
+	fmt.Printf("%v", s.client)
+	writeAPI := s.client.WriteAPIBlocking(influxOrg, "test")
 	// Create point using full params constructor
 	p := influxdb2.NewPoint("stat",
 		map[string]string{"unit": "temperature"},
@@ -71,7 +70,7 @@ func main() {
 	writeAPI.WriteRecord(context.Background(), line)
 
 	// Get query client
-	queryAPI := client.QueryAPI("mo")
+	queryAPI := s.client.QueryAPI(influxOrg)
 	// Get parser flux query result
 	result, err := queryAPI.Query(context.Background(), `from(bucket:"test")|> range(start: -1h) |> filter(fn: (r) => r._measurement == "stat")`)
 	if err == nil {
@@ -89,5 +88,5 @@ func main() {
 		}
 	}
 	// Ensures background processes finishes
-	client.Close()
+	s.client.Close()
 }
