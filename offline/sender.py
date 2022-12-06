@@ -23,19 +23,21 @@ def save_to_mongodb(data_dict):
     client = MongoClient(MONGODB_URL)
     db = client.mo
     pod_info_collection = db.pod_info
-    statistics_collection = db.statistics_collection
+    statistics_collection = db.statistics
 
     time = datetime.datetime.utcnow()
     pod_info_dict = data_dict[LABEL_POD_INFO]
 
-    pod_info_dict["time"] = time
-
-    msg_pod_info_id = pod_info_collection.insert_one(pod_info_dict.to_dict())
+    msg_pod_info_id = pod_info_collection.insert_one({
+        "time": time,
+        "data": pod_info_dict.to_dict()
+    })
 
     statistic_dict = data_dict[LABEL_STATISTICS]
-    statistic_dict["time"] = time
-    msg_statistic_id = statistics_collection.insert_one(
-        statistic_dict.to_dict())
+    msg_statistic_id = statistics_collection.insert_one({
+        "time": time,
+        "data": statistic_dict.to_dict()
+    })
 
     return {LABEL_POD_INFO: msg_pod_info_id, LABEL_STATISTICS: msg_statistic_id}
 # def save_md5_etcd(file_md5_dict):

@@ -14,12 +14,15 @@ const (
 	DefaultPromAddress    = "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
 	DefaultPromhealthyURL = "-/healthy"
 
-	DefaultETCDURL      = "etcd-dev.default.svc.cluster.local:2379"
-	DefaultETCDUsername = "root"
-	DefaultETCDPasswd   = "CrHkL98Ryr"
+	// DefaultETCDURL      = "etcd-dev.default.svc.cluster.local:2379"
+	// DefaultETCDUsername = "root"
+	// DefaultETCDPasswd   = "CrHkL98Ryr"
 
-	DefaultRemoteBaseDir = "offline"
-	DefaultLocalBaseDir  = "statistics"
+	// DefaultRemoteBaseDir = "offline"
+	// DefaultLocalBaseDir  = "statistics"
+	DefaultMongoURL                 = "mongodb://mo:momodel@10.214.241.226:37017/?authMechanism=DEFAULT&authSource=mo"
+	DefaultMongoDatabase            = "mo"
+	DefaultMongoStatisticCollection = "statistic"
 
 	DefaultInfluxURL   = "http://192.168.122.67:8086"
 	DefaultInfluxToken = "YEkyUh-YUJ6pfV3Tf996_uHQan_szSihhTxdgxGf9HDMxQ2AXin5UqXN7EoKeHDaM9p12yKOngeD-OrbKf0zTA=="
