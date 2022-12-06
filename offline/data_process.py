@@ -1,27 +1,43 @@
 from prometheus_api_client import PrometheusConnect
-import os
+# import os
 import logging
 import pandas as pd
-from config import PROMETHEUS_URL, RESULT_PATH, LABEL_FILENAME, LABEL_POD_INFO, LABEL_STATISTICS
-import datetime
+from config import PROMETHEUS_URL,  LABEL_POD_INFO, LABEL_STATISTICS
+
+# import datetime
+
+CPU_STD_UNIT_LABEL = "cpu_std/m"
+CPU_AVG_UNIT_LABEL = "cpu_avg/m"
+CPU_REQUEST_UNIT_LABEL = "cpu_request/m"
+CPU_LIMIT_UNIT_LABEL = "cpu_limit/m"
+
+MEM_STD_UNIT_LABEL = "mem_std/MiB"
+MEM_AVG_UNIT_LABEL = "mem_avg/MiB"
+MEM_REQUEST_UNIT_LABEL = "mem_request/m"
+MEM_LIMIT_UNIT_LABEL = "mem_limit/m"
+
+
+COURSE_LABEL = "course_label"
+ALL_COURSE_LABEL = "all"
+NODE_LABEL = "node"
+
+# Todo(label)
+# need change label
+prom_course_label = "instance"
+prom_node_label = "kubernetes_node"
+
 
 logging.info("promtheus address:" + PROMETHEUS_URL)
 prom = PrometheusConnect(url=PROMETHEUS_URL, disable_ssl=True)
 
 
-# Todo(label)
-# need change label
-course_label = "instance"
-node_label = "kubernetes_node"
+# result_dir = RESULT_PATH
+# pod_info_csv = "pod_info.csv"
+# statistics_csv = "statistics.csv"
 
 
-result_dir = RESULT_PATH
-pod_info_csv = "pod_info.csv"
-statistics_csv = "statistics.csv"
-
-
-if not os.path.exists(result_dir):
-    os.makedirs(result_dir)
+# if not os.path.exists(result_dir):
+#     os.makedirs(result_dir)
 
 
 def range_data_query(sql):
@@ -44,26 +60,26 @@ def fetch_label(data_total_dict):
     data = range_data_query("last_over_time(kube_pod_labels[15d])")
     for d in data:
         d = d["metric"]
-        if course_label in d:
+        if prom_course_label in d:
             dd = dict()
-            dd["label"] = d[course_label]
-            if node_label in d:
-                dd["node"] = d[node_label]
+            dd[COURSE_LABEL] = d[prom_course_label]
+            if prom_node_label in d:
+                dd["node"] = d[prom_node_label]
             data_total_dict[d["pod"]] = dd
 
 
 def fetch_metrics(data_total_dict):
     sql_list = [
-        ("sum(stddev_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate[15d])) by (pod)", "cpu_std/m", lambda x: x * 1000),
-        ("sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate[15d])) by (pod)", "cpu_avg/m", lambda x: x * 1000),
-        ("sum(last_over_time(cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests[15d])) by (pod)", "cpu_request/m", lambda x: x * 1000),
-        ("sum(last_over_time(cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits[15d])) by (pod)", "cpu_limit/m", lambda x: x * 1000),
+        ("sum(stddev_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate[15d])) by (pod)", CPU_STD_UNIT_LABEL, lambda x: x * 1000),
+        ("sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate[15d])) by (pod)", CPU_AVG_UNIT_LABEL, lambda x: x * 1000),
+        ("sum(last_over_time(cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests[15d])) by (pod)", CPU_REQUEST_UNIT_LABEL, lambda x: x * 1000),
+        ("sum(last_over_time(cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits[15d])) by (pod)", CPU_LIMIT_UNIT_LABEL, lambda x: x * 1000),
 
 
-        ("sum(stddev_over_time(node_namespace_pod_container:container_memory_working_set_bytes[15d])) by (pod)", "mem_std/MiB", lambda x: x / 1024 / 1024),
-        ("sum(avg_over_time(node_namespace_pod_container:container_memory_working_set_bytes[15d])) by (pod)", "mem_avg/MiB", lambda x: x / 1024 / 1024),
-        ("sum(last_over_time(cluster:namespace:pod_memory:active:kube_pod_container_resource_requests[15d])) by (pod)", "mem_request/MiB", lambda x: x / 1024 / 1024),
-        ("sum(last_over_time(cluster:namespace:pod_memory:active:kube_pod_container_resource_limits[15d])) by (pod)", "mem_limit/MiB", lambda x: x / 1024 / 1024),
+        ("sum(stddev_over_time(node_namespace_pod_container:container_memory_working_set_bytes[15d])) by (pod)", MEM_STD_UNIT_LABEL, lambda x: x / 1024 / 1024),
+        ("sum(avg_over_time(node_namespace_pod_container:container_memory_working_set_bytes[15d])) by (pod)", MEM_AVG_UNIT_LABEL, lambda x: x / 1024 / 1024),
+        ("sum(last_over_time(cluster:namespace:pod_memory:active:kube_pod_container_resource_requests[15d])) by (pod)", MEM_REQUEST_UNIT_LABEL, lambda x: x / 1024 / 1024),
+        ("sum(last_over_time(cluster:namespace:pod_memory:active:kube_pod_container_resource_limits[15d])) by (pod)", MEM_LIMIT_UNIT_LABEL, lambda x: x / 1024 / 1024),
 
 
     ]
@@ -72,32 +88,50 @@ def fetch_metrics(data_total_dict):
         add_data2dict1(data_total_dict, sql[0], sql[1], sql[2])
 
 
-def to_file(data_total_dict):
-    time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    file_path_dict = {}
+# def to_file(data_total_dict):
+#     time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+#     file_path_dict = {}
+#     data = pd.DataFrame(data_total_dict)
+#     data = data.T
+#     newfileName = time + "-" + pod_info_csv
+#     p = os.path.join(result_dir, newfileName)
+#     file_path_dict[LABEL_POD_INFO] = {LABEL_FILENAME: newfileName}
+#     data.to_csv(p)
+
+#     statistics_label = ["cpu_std/m", "cpu_avg/m", "mem_std/MiB", "mem_avg/MiB"]
+#     new_data = data.groupby(data["label"])[statistics_label].mean()
+#     new_data.loc["all"] = data[statistics_label].mean()
+#     newfileName = time + "-" + statistics_csv
+#     p = os.path.join(result_dir, newfileName)
+#     file_path_dict[LABEL_STATISTICS] = {LABEL_FILENAME: newfileName}
+#     new_data.to_csv(p)
+
+#     return file_path_dict
+
+
+def analysis(data_total_dict):
+    total_dict = dict()
     data = pd.DataFrame(data_total_dict)
     data = data.T
-    newfileName = time + "-" + pod_info_csv
-    p = os.path.join(result_dir, newfileName)
-    file_path_dict[LABEL_POD_INFO] = {LABEL_FILENAME: newfileName}
-    data.to_csv(p)
 
-    statistics_label = ["cpu_std/m", "cpu_avg/m", "mem_std/MiB", "mem_avg/MiB"]
-    new_data = data.groupby(data["label"])[statistics_label].mean()
-    new_data.loc["all"] = data[statistics_label].mean()
-    newfileName = time + "-" + statistics_csv
-    p = os.path.join(result_dir, newfileName)
-    file_path_dict[LABEL_STATISTICS] = {LABEL_FILENAME: newfileName}
-    new_data.to_csv(p)
+    statistics_label = [CPU_STD_UNIT_LABEL, CPU_AVG_UNIT_LABEL,
+                        MEM_STD_UNIT_LABEL, MEM_AVG_UNIT_LABEL]
+    # ["cpu_std/m", "cpu_avg/m", "mem_std/MiB", "mem_avg/MiB"]
+    new_data = data.groupby(data[COURSE_LABEL])[statistics_label].mean()
+    new_data.loc[ALL_COURSE_LABEL] = data[statistics_label].mean()
 
-    return file_path_dict
+    total_dict[LABEL_POD_INFO] = data.T
+    total_dict[LABEL_STATISTICS] = new_data.T
+
+    return total_dict
 
 
 def run():
-    data_total_dict = dict()
-    fetch_label(data_total_dict)
+    source_data_dict = dict()
 
-    fetch_metrics(data_total_dict)
-    file_paths = to_file(data_total_dict)
+    fetch_label(source_data_dict)
+    fetch_metrics(source_data_dict)
+    data_total = analysis(source_data_dict)
+    # file_paths = to_file(data_total_dict)
 
-    return file_paths
+    return data_total

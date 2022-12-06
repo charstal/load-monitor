@@ -7,19 +7,23 @@ PROMETHEUS_URL = os.environ.get(
 RESULT_PATH = os.environ.get("RESULT_PATH", "offline")
 
 
-ETCD_HOST = os.environ.get("ETCD_HOST", "etcd-dev.default.svc.cluster.local")
-ETCD_PORT = os.environ.get("ETCD_PROT", "2379")
-ETCD_USER = os.environ.get("ETCD_USER", "root")
-ETCD_PASSWD = os.environ.get("ETCD_PASSWD", "CrHkL98Ryr")
+# ETCD_HOST = os.environ.get("ETCD_HOST", "etcd-dev.default.svc.cluster.local")
+# ETCD_PORT = os.environ.get("ETCD_PROT", "2379")
+# ETCD_USER = os.environ.get("ETCD_USER", "root")
+# ETCD_PASSWD = os.environ.get("ETCD_PASSWD", "CrHkL98Ryr")
 
 logging.info("PROMETHEUS_URL:" + PROMETHEUS_URL)
-logging.info("ETCD_HOST:" + ETCD_HOST + " ETCD_PORT" + ETCD_PORT)
+# logging.info("ETCD_HOST:" + ETCD_HOST + " ETCD_PORT" + ETCD_PORT)
+
+
+MONGODB_URL = os.environ.get(
+    "MONGODB_URL", "mongodb://mo:momodel@10.214.241.226:37017/?authMechanism=DEFAULT&authSource=mo")
 
 
 LABEL_POD_INFO = "POD_INFO"
 LABEL_STATISTICS = "STATISTICS"
-LABEL_FILENAME = "NAME"
-LABEL_FILEMD5 = "MD5"
+# LABEL_FILENAME = "NAME"
+# LABEL_FILEMD5 = "MD5"
 
 
 LOAD_MONITOR_JOB_URL = os.environ.get(
