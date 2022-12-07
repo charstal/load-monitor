@@ -10,16 +10,6 @@ spec:
         imagePullPolicy: Always
         image: registry.cn-hangzhou.aliyuncs.com/charstal/offline-job:v0.0.1
         env:
-          - name: RESULT_PATH
-            value: /bin/tmp/offline
           - name: LOAD_MONITOR_JOB_URL
             value: http://load-monitor-svc.default.svc.cluster.local:2020/job
-        volumeMounts:
-        - name: nfs
-          mountPath: "/bin/tmp"
-      volumes:
-        - name: nfs
-          persistentVolumeClaim:
-            claimName: load-monitor-pvc
       restartPolicy: Never
-  # backoffLimit: 4

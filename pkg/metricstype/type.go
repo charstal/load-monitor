@@ -53,12 +53,16 @@ type Data struct {
 	NodeMetricsMap NodeMetricsMap
 }
 
+type StatisticsData struct {
+	StatisticsMap NodeMetricsMap
+}
+
 type WatcherMetrics struct {
-	Timestamp  int64  `json:"timestamp"`
-	Window     Window `json:"window"`
-	Source     string `json:"source"`
-	Data       Data   `json:"data"`
-	Statistics Data   `json:"statistics"`
+	Timestamp  int64          `json:"timestamp"`
+	Window     Window         `json:"window"`
+	Source     string         `json:"source"`
+	Data       Data           `json:"data"`
+	Statistics StatisticsData `json:"statistics"`
 }
 
 type Tags struct {
@@ -80,7 +84,7 @@ func CurrentFifteenMinuteWindow() *Window {
 }
 
 func CurrentTenMinuteWindow() *Window {
-	curTime := time.Now().Unix()
+	curTime := time.Now().UTC().Unix()
 	return &Window{TenMinutes, curTime - 10*60, curTime}
 }
 

@@ -169,7 +169,7 @@ func (w *Watcher) deepCopyWatcherMetrics(src *metricstype.WatcherMetrics) *metri
 	}
 
 	statisticMetricsMap := make(map[string]metricstype.NodeMetrics)
-	for host, fetchedMetric := range src.Statistics.NodeMetricsMap {
+	for host, fetchedMetric := range src.Statistics.StatisticsMap {
 		nodeMetric := metricstype.NodeMetrics{
 			Metrics: make([]metricstype.Metric, len(fetchedMetric.Metrics)),
 			Tags:    fetchedMetric.Tags,
@@ -186,8 +186,8 @@ func (w *Watcher) deepCopyWatcherMetrics(src *metricstype.WatcherMetrics) *metri
 		Data: metricstype.Data{
 			NodeMetricsMap: nodeMetricsMap,
 		},
-		Statistics: metricstype.Data{
-			NodeMetricsMap: statisticMetricsMap,
+		Statistics: metricstype.StatisticsData{
+			StatisticsMap: statisticMetricsMap,
 		},
 	}
 }
@@ -220,7 +220,7 @@ func metricMapToWatcherMetrics(metricMap map[string][]metricstype.Metric, statis
 		Data:       metricstype.Data{NodeMetricsMap: metricsMap},
 		Source:     clientName,
 		Window:     window,
-		Statistics: metricstype.Data{NodeMetricsMap: statisticsMap},
+		Statistics: metricstype.StatisticsData{StatisticsMap: statisticsMap},
 	}
 	// fmt.Printf("%v", watcherMetrics)
 	return watcherMetrics

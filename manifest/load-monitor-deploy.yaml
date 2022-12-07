@@ -23,21 +23,10 @@ spec:
         env:
           - name: INFLUXDB_URL
             value: http://192.168.122.67:8086
-          - name: REMOTE_BASE_DIR
-            value: /bin/tmp/offline
-          - name: LOCAL_BASE_DIR
-            value: /bin/tmp/statistics
           - name: METRICS_PROVIDER_NAME
             value: Prometheus
           - name: LOG_LEVEL
             value: debug
-        volumeMounts:
-        - name: nfs
-          mountPath: "/bin/tmp"
-      volumes:
-        - name: nfs
-          persistentVolumeClaim:
-            claimName: load-monitor-pvc
 ---
 apiVersion: v1
 kind: Service

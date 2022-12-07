@@ -20,7 +20,7 @@ const (
 
 	// DefaultRemoteBaseDir = "offline"
 	// DefaultLocalBaseDir  = "statistics"
-	DefaultMongoURL                 = "mongodb://mo:momodel@10.214.241.226:37017/?authSource=mo"
+	DefaultMongoURL                 = "mongodb://mo:momodel@192.168.122.67:27017/?authSource=mo"
 	DefaultMongoDatabase            = "mo"
 	DefaultMongoStatisticCollection = "statistics"
 

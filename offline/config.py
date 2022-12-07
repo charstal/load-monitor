@@ -17,7 +17,7 @@ logging.info("PROMETHEUS_URL:" + PROMETHEUS_URL)
 
 
 MONGODB_URL = os.environ.get(
-    "MONGODB_URL", "mongodb://mo:momodel@10.214.241.226:37017/?authMechanism=DEFAULT&authSource=mo")
+    "MONGODB_URL", "mongodb://mo:momodel@192.168.122.67:27017/?authSource=mo")
 
 
 LABEL_POD_INFO = "POD_INFO"

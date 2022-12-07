@@ -5,13 +5,12 @@ import requests
 # from config import LABEL_FILEMD5, LABEL_POD_INFO, LABEL_STATISTICS, LABEL_FILENAME
 from config import LOAD_MONITOR_JOB_URL, MONGODB_URL, LABEL_POD_INFO, LABEL_STATISTICS
 from pymongo import MongoClient
-from dateutil import parser
-import time
+import datetime
 
-pod_info_url = "/metric/pod_info_path"
-pod_info_md5_url = "/metric/pod_info_md5"
-statistics_url = "/metric/statistics_path"
-statistics_md5_url = "/metric/statistics_path_md5"
+# pod_info_url = "/metric/pod_info_path"
+# pod_info_md5_url = "/metric/pod_info_md5"
+# statistics_url = "/metric/statistics_path"
+# statistics_md5_url = "/metric/statistics_path_md5"
 
 
 def run(data_dict):
@@ -26,7 +25,7 @@ def save_to_mongodb(data_dict):
     pod_info_collection = db.pod_info
     statistics_collection = db.statistics
 
-    t = parser.parse(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+    t = datetime.datetime.utcnow()
     pod_info_dict = data_dict[LABEL_POD_INFO]
 
     msg_pod_info_id = pod_info_collection.insert_one({

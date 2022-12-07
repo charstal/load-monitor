@@ -68,6 +68,30 @@ func (d *Data) UnmarshalJSONObject(dec *gojay.Decoder, k string) error {
 func (d *Data) NKeys() int { return 1 }
 
 // MarshalJSONObject implements MarshalerJSONObject
+func (d *StatisticsData) MarshalJSONObject(enc *gojay.Encoder) {
+	enc.ObjectKey("StatisticsMap", &d.StatisticsMap)
+}
+
+// IsNil checks if instance is nil
+func (d *StatisticsData) IsNil() bool {
+	return d == nil
+}
+
+// UnmarshalJSONObject implements gojay's UnmarshalerJSONObject
+func (d *StatisticsData) UnmarshalJSONObject(dec *gojay.Decoder, k string) error {
+
+	switch k {
+	case "StatisticsMap":
+		err := dec.Object(&d.StatisticsMap)
+		return err
+	}
+	return nil
+}
+
+// NKeys returns the number of keys to unmarshal
+func (d *StatisticsData) NKeys() int { return 1 }
+
+// MarshalJSONObject implements MarshalerJSONObject
 func (m *Metadata) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("dataCenter", m.DataCenter)
 }
