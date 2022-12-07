@@ -3,17 +3,37 @@ package statistics
 import (
 	"context"
 	"os"
+	"time"
 
 	cfg "github.com/charstal/load-monitor/pkg/config"
 	"github.com/charstal/load-monitor/pkg/metricstype"
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type statisticsData struct {
+	CpuStd float64 `bson:"cpu_std/m"`
+	CpuAvg float64 `bson:"cpu_avg/m"`
+	MemStd float64 `bson:"mem_std/MiB"`
+	MemAvg float64 `bson:"mem_avg/MiB"`
+}
+
+type Statistics struct {
+	ID   primitive.ObjectID        `bson:"_id"`
+	Time time.Time                 `bson:"time"`
+	Data map[string]statisticsData `bson:"data"`
+}
+
 type OfflineReader struct {
 	// mongodb client
-	client     *mongo.Client
-	statisData *map[string][]metricstype.Metric
+	client              *mongo.Client
+	sourceStatistics    *Statistics
+	timeReceived        time.Time
+	generatedStatistics *map[string][]metricstype.Metric
+	// mtx
 }
 
 const (
@@ -133,16 +153,64 @@ func (or *OfflineReader) Update() error {
 	// if err != nil {
 	// 	return err
 	// }
+	or.getFromMongo()
+	or.generateStatistics()
 
 	return nil
 }
 
-func (or *OfflineReader) GetFromMongo() {
+func (or *OfflineReader) generateStatistics() {
+	// pull latest time
+	src := or.sourceStatistics
 
+	if or.timeReceived.After(src.Time) {
+		return
+	}
+
+	curMetrics := make(map[string][]metricstype.Metric)
+	for label, item := range src.Data {
+		arr := make([]metricstype.Metric, 0)
+		if len(label) == 0 {
+			continue
+		}
+
+		metricsName := "statistic"
+		// fmt.Println(label)
+		cpuStd := item.CpuStd
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Std, Rollup: "", Unit: metricstype.M, Value: cpuStd})
+		cpuAvg := item.CpuAvg
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Average, Rollup: "", Unit: metricstype.M, Value: cpuAvg})
+		memStd := item.MemStd
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Std, Rollup: "", Unit: metricstype.MiB, Value: memStd})
+		memAvg := item.MemAvg
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Average, Rollup: "", Unit: metricstype.MiB, Value: memAvg})
+		curMetrics[label] = append(curMetrics[label], arr...)
+	}
+
+	or.timeReceived = src.Time
+	or.generatedStatistics = &curMetrics
+}
+
+func (or *OfflineReader) getFromMongo() error {
+	collection := or.client.Database(mongodbDatabase).Collection(mongodbStatisticCollection)
+	// var result interface{}
+	// s := map[string]int{
+	// 	"_id": -1,
+	// }
+	var opts = options.FindOne()
+	opts.SetSort(bson.D{{Key: "time", Value: -1}})
+	var res Statistics
+	err := collection.FindOne(context.TODO(), bson.D{{}}, opts).Decode(&res)
+	if err != nil {
+		return err
+	}
+	log.Infof("read from mongodb %v", res)
+	or.sourceStatistics = &res
+	return nil
 }
 
 func (or *OfflineReader) GetMetrics() *map[string][]metricstype.Metric {
-	return or.statisData
+	return or.generatedStatistics
 }
 
 // func (or *OfflineReader) pullFromEtcd() error {

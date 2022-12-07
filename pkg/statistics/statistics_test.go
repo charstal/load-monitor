@@ -13,3 +13,10 @@ func TestNew(t *testing.T) {
 
 	fmt.Printf("%v", c)
 }
+
+func TestQuery(t *testing.T) {
+	c, err := NewOfflineReader()
+	assert.Nil(t, err)
+
+	c.getFromMongo()
+}
