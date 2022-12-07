@@ -22,6 +22,7 @@ const (
 	Hugepages_2Mi     = "hugepages_2Mi"
 	Pods              = "pods"
 	Network           = "network"
+	Disk              = "disk"
 
 	// unit
 	Ratio   = "ratio"

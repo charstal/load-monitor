@@ -1,29 +1,13 @@
 {
-  "timestamp": 1670243550,
+  "timestamp": 1670420547,
   "window": {
     "duration": "5m",
-    "start": 1670243250,
-    "end": 1670243550
+    "start": 1670420247,
+    "end": 1670420547
   },
   "source": "Prometheus",
   "data": {
     "NodeMetricsMap": {
-      "": {
-        "metrics": [
-          {
-            "name": "node_pod_count_of_label",
-            "type": "",
-            "operator": "Latest",
-            "rollup": "",
-            "value": 32,
-            "unit": "integer"
-          }
-        ],
-        "tags": {},
-        "metadata": {
-          "dataCenter": ""
-        }
-      },
       "k8s-master": {
         "metrics": [
           {
@@ -35,28 +19,12 @@
             "unit": "core"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "ephemeral_storage",
             "operator": "Capacity",
             "rollup": "",
             "value": 18238930944,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -67,28 +35,12 @@
             "unit": "byte"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "memory",
             "operator": "Capacity",
             "rollup": "",
-            "value": 20882812928,
+            "value": 21050437632,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -111,7 +63,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 2.8100438596491184,
+            "value": 2.1164035087719295,
             "unit": "ratio"
           },
           {
@@ -119,7 +71,7 @@
             "type": "cpu",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.02210060693089525,
+            "value": 0.014772565306991704,
             "unit": "ratio"
           },
           {
@@ -127,7 +79,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 2.7649122807017275,
+            "value": 2.145175438596481,
             "unit": "ratio"
           },
           {
@@ -135,7 +87,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 20.997914420430327,
+            "value": 10.78838480273549,
             "unit": "ratio"
           },
           {
@@ -143,7 +95,7 @@
             "type": "memory",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.017181840470361746,
+            "value": 0.022215151906165943,
             "unit": "ratio"
           },
           {
@@ -151,7 +103,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 21.00337305669705,
+            "value": 10.82520133707784,
             "unit": "ratio"
           },
           {
@@ -159,7 +111,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 22.821052631578944,
+            "value": 23.277192982456135,
             "unit": ""
           },
           {
@@ -175,7 +127,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 22.821052631578944,
+            "value": 23.277192982456135,
             "unit": ""
           },
           {
@@ -183,7 +135,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 9,
+            "value": 11,
             "unit": "integer"
           },
           {
@@ -191,7 +143,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 315,
+            "value": 340,
             "unit": "integer"
           },
           {
@@ -199,7 +151,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.0019610136452237175,
+            "value": 0.001660428849902185,
             "unit": ""
           },
           {
@@ -207,7 +159,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.017000000000004085,
+            "value": 0.01461754385964931,
             "unit": ""
           },
           {
@@ -215,7 +167,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.03360964912296227,
+            "value": 0.027087719298246493,
             "unit": ""
           },
           {
@@ -223,7 +175,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 8249.37894736842,
+            "value": 7294.922807017544,
             "unit": ""
           },
           {
@@ -239,7 +191,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 23370.221052631576,
+            "value": 22555.28771929825,
             "unit": ""
           },
           {
@@ -267,28 +219,12 @@
             "unit": "core"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "ephemeral_storage",
             "operator": "Capacity",
             "rollup": "",
             "value": 18238930944,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -299,28 +235,12 @@
             "unit": "byte"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "memory",
             "operator": "Capacity",
             "rollup": "",
-            "value": 20882829312,
+            "value": 21050437632,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -343,7 +263,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 2.5604824561400297,
+            "value": 0.7436842105263154,
             "unit": "ratio"
           },
           {
@@ -351,7 +271,7 @@
             "type": "cpu",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.015223089672283441,
+            "value": 0.007982456140350546,
             "unit": "ratio"
           },
           {
@@ -359,7 +279,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 2.5684210526292914,
+            "value": 0.7574561403508764,
             "unit": "ratio"
           },
           {
@@ -367,7 +287,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 22.849007727406548,
+            "value": 5.241465368504886,
             "unit": "ratio"
           },
           {
@@ -375,7 +295,7 @@
             "type": "memory",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.02117928258289463,
+            "value": 0.0053130924244096525,
             "unit": "ratio"
           },
           {
@@ -383,7 +303,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 22.834146047728797,
+            "value": 5.243938483834365,
             "unit": "ratio"
           },
           {
@@ -391,7 +311,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 1.8736842105263154,
+            "value": 0.21403508771929824,
             "unit": ""
           },
           {
@@ -407,7 +327,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 1.8736842105263154,
+            "value": 0.21403508771929824,
             "unit": ""
           },
           {
@@ -415,7 +335,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 11,
+            "value": 4,
             "unit": "integer"
           },
           {
@@ -423,7 +343,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 506,
+            "value": 128,
             "unit": "integer"
           },
           {
@@ -431,7 +351,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.00039999999999922834,
+            "value": 0.00000935672514704131,
             "unit": ""
           },
           {
@@ -439,7 +359,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.001694736842105876,
+            "value": 0.00011929824561400637,
             "unit": ""
           },
           {
@@ -447,7 +367,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.030460526317096615,
+            "value": 0.00914473684210615,
             "unit": ""
           },
           {
@@ -455,7 +375,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 34585.10877192982,
+            "value": 3051.2245614035082,
             "unit": ""
           },
           {
@@ -471,7 +391,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 50449.88771929825,
+            "value": 5073.01403508772,
             "unit": ""
           },
           {
@@ -499,28 +419,12 @@
             "unit": "core"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "ephemeral_storage",
             "operator": "Capacity",
             "rollup": "",
             "value": 18238930944,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -531,28 +435,12 @@
             "unit": "byte"
           },
           {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
-          },
-          {
             "name": "kube_node_status_capacity",
             "type": "memory",
             "operator": "Capacity",
             "rollup": "",
-            "value": 20882812928,
+            "value": 21050437632,
             "unit": "byte"
-          },
-          {
-            "name": "node_network",
-            "type": "network",
-            "operator": "Capacity",
-            "rollup": "",
-            "value": 10420224,
-            "unit": "bytes"
           },
           {
             "name": "kube_node_status_capacity",
@@ -575,7 +463,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 3.238983253348566,
+            "value": 3.3665350877193037,
             "unit": "ratio"
           },
           {
@@ -583,7 +471,7 @@
             "type": "cpu",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.01260409697657466,
+            "value": 0.011791721929534439,
             "unit": "ratio"
           },
           {
@@ -591,7 +479,7 @@
             "type": "cpu",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 3.2468500773602567,
+            "value": 3.385526315789475,
             "unit": "ratio"
           },
           {
@@ -599,7 +487,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 22.54658817580535,
+            "value": 12.606939861268154,
             "unit": "ratio"
           },
           {
@@ -607,7 +495,7 @@
             "type": "memory",
             "operator": "Std",
             "rollup": "5m",
-            "value": 0.0374242046603081,
+            "value": 0.0366152137980835,
             "unit": "ratio"
           },
           {
@@ -615,7 +503,7 @@
             "type": "memory",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 22.61927061400145,
+            "value": 12.605922206415821,
             "unit": "ratio"
           },
           {
@@ -623,7 +511,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 1.550877192982456,
+            "value": 1.9298245614035086,
             "unit": ""
           },
           {
@@ -639,7 +527,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "",
-            "value": 1.550877192982456,
+            "value": 1.9298245614035086,
             "unit": ""
           },
           {
@@ -647,7 +535,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 11,
+            "value": 15,
             "unit": "integer"
           },
           {
@@ -655,7 +543,7 @@
             "type": "",
             "operator": "Latest",
             "rollup": "",
-            "value": 432,
+            "value": 656,
             "unit": "integer"
           },
           {
@@ -663,7 +551,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.0007925925925966319,
+            "value": 0.0018124756335283097,
             "unit": ""
           },
           {
@@ -671,7 +559,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.002389473684212262,
+            "value": 0.0019263157894737072,
             "unit": ""
           },
           {
@@ -679,7 +567,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 0.0375000000000002,
+            "value": 0.03892105263157508,
             "unit": ""
           },
           {
@@ -687,7 +575,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 46619.912280701756,
+            "value": 27101.378947368416,
             "unit": ""
           },
           {
@@ -703,7 +591,7 @@
             "type": "",
             "operator": "Unknown",
             "rollup": "5m",
-            "value": 39431.03859649123,
+            "value": 32897.14736842105,
             "unit": ""
           },
           {
@@ -719,59 +607,35 @@
         "metadata": {
           "dataCenter": ""
         }
-      }
-    }
-  },
-  "statistics": {
-    "NodeMetricsMap": {
-      "10.244.1.13:8443": {
+      },
+      "": {
         "metrics": [
           {
-            "name": "statistic",
-            "type": "cpu",
-            "operator": "Std",
+            "name": "node_pod_count_of_label",
+            "type": "",
+            "operator": "Latest",
             "rollup": "",
-            "value": 0,
-            "unit": "m"
-          },
-          {
-            "name": "statistic",
-            "type": "cpu",
-            "operator": "Avg",
-            "rollup": "",
-            "value": 0,
-            "unit": "m"
-          },
-          {
-            "name": "statistic",
-            "type": "memory",
-            "operator": "Std",
-            "rollup": "",
-            "value": 0,
-            "unit": "MiB"
-          },
-          {
-            "name": "statistic",
-            "type": "memory",
-            "operator": "Avg",
-            "rollup": "",
-            "value": 0,
-            "unit": "MiB"
+            "value": 31,
+            "unit": "integer"
           }
         ],
         "tags": {},
         "metadata": {
           "dataCenter": ""
         }
-      },
-      "10.244.1.36:8443": {
+      }
+    }
+  },
+  "statistics": {
+    "StatisticsMap": {
+      "10.244.2.97:8443": {
         "metrics": [
           {
             "name": "statistic",
             "type": "cpu",
             "operator": "Std",
             "rollup": "",
-            "value": 3.459734523261826,
+            "value": 4.445074889061789,
             "unit": "m"
           },
           {
@@ -779,7 +643,7 @@
             "type": "cpu",
             "operator": "Avg",
             "rollup": "",
-            "value": 8.703100670104005,
+            "value": 9.915105076103156,
             "unit": "m"
           },
           {
@@ -787,7 +651,7 @@
             "type": "memory",
             "operator": "Std",
             "rollup": "",
-            "value": 5.296193979772441,
+            "value": 16.116328917903715,
             "unit": "MiB"
           },
           {
@@ -795,7 +659,7 @@
             "type": "memory",
             "operator": "Avg",
             "rollup": "",
-            "value": 97.33119830998818,
+            "value": 268.65914033130724,
             "unit": "MiB"
           }
         ],
@@ -811,7 +675,7 @@
             "type": "cpu",
             "operator": "Std",
             "rollup": "",
-            "value": 3.459734523261826,
+            "value": 3.691845556554058,
             "unit": "m"
           },
           {
@@ -819,7 +683,7 @@
             "type": "cpu",
             "operator": "Avg",
             "rollup": "",
-            "value": 8.703100670104005,
+            "value": 8.162157174091552,
             "unit": "m"
           },
           {
@@ -827,7 +691,7 @@
             "type": "memory",
             "operator": "Std",
             "rollup": "",
-            "value": 5.296193979772441,
+            "value": 13.211062923329079,
             "unit": "MiB"
           },
           {
@@ -835,7 +699,47 @@
             "type": "memory",
             "operator": "Avg",
             "rollup": "",
-            "value": 97.33119830998818,
+            "value": 219.22080028572537,
+            "unit": "MiB"
+          }
+        ],
+        "tags": {},
+        "metadata": {
+          "dataCenter": ""
+        }
+      },
+      "10.244.2.128:8443": {
+        "metrics": [
+          {
+            "name": "statistic",
+            "type": "cpu",
+            "operator": "Std",
+            "rollup": "",
+            "value": 0.4637198458066435,
+            "unit": "m"
+          },
+          {
+            "name": "statistic",
+            "type": "cpu",
+            "operator": "Avg",
+            "rollup": "",
+            "value": 0.6495233083275241,
+            "unit": "m"
+          },
+          {
+            "name": "statistic",
+            "type": "memory",
+            "operator": "Std",
+            "rollup": "",
+            "value": 0.7599229465806391,
+            "unit": "MiB"
+          },
+          {
+            "name": "statistic",
+            "type": "memory",
+            "operator": "Avg",
+            "rollup": "",
+            "value": 7.3422000903745035,
             "unit": "MiB"
           }
         ],

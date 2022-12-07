@@ -432,7 +432,11 @@ func (s promClient) sqlWithTime2MetricMap(sql string, data model.Value, rollup s
 		for _, result := range data.(model.Vector) {
 			host := string(result.Metric["instance"])
 			value := float64(result.Value)
-			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: "", Operator: metricstype.UnknownOperator, Rollup: rollup, Unit: "", Value: value}
+			unit := ""
+			if strings.Contains(sql2NameMap[sql], "bytes") {
+				unit = metricstype.Bytes
+			}
+			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: "", Operator: metricstype.UnknownOperator, Rollup: rollup, Unit: unit, Value: value}
 			curMetrics[host] = append(curMetrics[host], curMetric)
 		}
 	default:
@@ -453,15 +457,18 @@ func (s promClient) nodeCapacity2MetricMap(data model.Value) map[string][]metric
 			resource := strings.ToLower(string(result.Metric["resource"]))
 			unit := strings.ToLower(string(result.Metric["unit"]))
 			value := float64(result.Value)
-			curMetric := metricstype.Metric{Name: KubeNodeStatusCapacity, Type: resource, Operator: operator, Rollup: "", Unit: unit, Value: value}
+			curMetric := metricstype.Metric{Name: KubeNodeStatusCapacity, Type: resource, Operator: operator, Rollup: metricstype.Latest, Unit: unit, Value: value}
 			curMetrics[host] = append(curMetrics[host], curMetric)
 
-			// networkcapacity
-			networkcapcaity := metricstype.Metric{Name: "node_network", Type: metricstype.Network, Operator: operator, Rollup: "", Unit: metricstype.Bytes, Value: cfg.DiskBandwidthBytes}
-			curMetrics[host] = append(curMetrics[host], networkcapcaity)
 		}
 	default:
 		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+	}
+
+	for host := range curMetrics {
+		// networkcapacity
+		networkcapcaity := metricstype.Metric{Name: "kube_node_status_capacity", Type: metricstype.Network, Operator: operator, Rollup: metricstype.Latest, Unit: metricstype.Bytes, Value: cfg.DiskBandwidthBytes}
+		curMetrics[host] = append(curMetrics[host], networkcapcaity)
 	}
 
 	return curMetrics
@@ -480,10 +487,12 @@ func (s promClient) nodeCpuMem2MetricMap(data model.Value, metric PromResource, 
 		metricType = metricstype.Memory
 	}
 
-	if method == NodeMemoryUtilRatio {
+	if method == Avg {
 		operator = metricstype.Average
 	} else if method == Std {
 		operator = metricstype.Std
+	} else if method == Latest {
+		operator = metricstype.Latest
 	} else {
 		operator = metricstype.UnknownOperator
 	}

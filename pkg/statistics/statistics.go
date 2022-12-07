@@ -175,15 +175,16 @@ func (or *OfflineReader) generateStatistics() {
 		}
 
 		metricsName := "statistic"
+		rollup := "15d"
 		// fmt.Println(label)
 		cpuStd := item.CpuStd
-		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Std, Rollup: "", Unit: metricstype.M, Value: cpuStd})
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Std, Rollup: rollup, Unit: metricstype.M, Value: cpuStd})
 		cpuAvg := item.CpuAvg
-		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Average, Rollup: "", Unit: metricstype.M, Value: cpuAvg})
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.CPU, Operator: metricstype.Average, Rollup: rollup, Unit: metricstype.M, Value: cpuAvg})
 		memStd := item.MemStd
-		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Std, Rollup: "", Unit: metricstype.MiB, Value: memStd})
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Std, Rollup: rollup, Unit: metricstype.MiB, Value: memStd})
 		memAvg := item.MemAvg
-		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Average, Rollup: "", Unit: metricstype.MiB, Value: memAvg})
+		arr = append(arr, metricstype.Metric{Name: metricsName, Type: metricstype.Memory, Operator: metricstype.Average, Rollup: rollup, Unit: metricstype.MiB, Value: memAvg})
 		curMetrics[label] = append(curMetrics[label], arr...)
 	}
 
