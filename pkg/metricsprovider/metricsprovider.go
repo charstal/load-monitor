@@ -44,8 +44,8 @@ func init() {
 	if !ok {
 		EnvMetricProviderOpts.Name = K8sClientName
 	}
-	EnvMetricProviderOpts.Address, ok = os.LookupEnv(MetricsProviderAddressKey)
-	EnvMetricProviderOpts.AuthToken, ok = os.LookupEnv(MetricsProviderTokenKey)
+	EnvMetricProviderOpts.Address, _ = os.LookupEnv(MetricsProviderAddressKey)
+	EnvMetricProviderOpts.AuthToken, _ = os.LookupEnv(MetricsProviderTokenKey)
 	insecureVerify, _ := os.LookupEnv(InsecureSkipVerify)
 	if strings.ToLower(insecureVerify) == "true" {
 		EnvMetricProviderOpts.InsecureSkipVerify = true

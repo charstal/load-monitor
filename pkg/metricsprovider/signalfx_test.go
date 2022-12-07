@@ -92,7 +92,7 @@ func TestFetchAllHostMetrics(t *testing.T) {
 	assert.Nil(t, err)
 
 	curTime := time.Now().Unix()
-	windows := &metricstype.Window{metricstype.FifteenMinutes, curTime - 15*60, curTime}
+	windows := &metricstype.Window{Duration: metricstype.FifteenMinutes, Start: curTime - 15*60, End: curTime}
 
 	metrics, err := client.FetchAllHostsMetrics(windows)
 	assert.Nil(t, err)

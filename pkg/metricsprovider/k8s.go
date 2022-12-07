@@ -69,6 +69,9 @@ func NewMetricsServerClient() (MetricsProviderClient, error) {
 	}
 
 	metricsClientSet, err := metricsv.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
