@@ -51,7 +51,7 @@ type PromResource = string
 type PromSQL = string
 
 const (
-	baseHealthyURL      = "-/healthy"
+	baseHealthyURL      = "/-/healthy"
 	EnableOpenShiftAuth = "ENABLE_OPENSHIFT_AUTH"
 	KubeConfig          = "KUBE_CONFIG"
 )

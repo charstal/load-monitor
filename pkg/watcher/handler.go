@@ -45,6 +45,11 @@ func (w *Watcher) GetLatestWatcherMetrics(duration string) (*metricstype.Watcher
 	}
 }
 
+func (w *Watcher) Healthy() error {
+	_, err := w.client.Healthy()
+	return err
+}
+
 func (w *Watcher) startHttpServer(shutdown chan struct{}) {
 	http.HandleFunc(BaseUrl, w.handler)
 	http.HandleFunc(HealthCheckUrl, w.healthCheckHandler)

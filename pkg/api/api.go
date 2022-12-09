@@ -24,4 +24,7 @@ import (
 type Client interface {
 	// Returns latest metrics present in load Watcher cache
 	GetLatestWatcherMetrics() (*metricstype.WatcherMetrics, error)
+	// for statistics based load variation balancing plugin, reduce some redunant data
+	GetCompactWatcherMetrics() (*metricstype.WatcherMetrics, error)
+	Healthy() error
 }

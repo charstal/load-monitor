@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	httpClientTimeoutSeconds = 55 * time.Second
+	httpClientTimeoutSecond = 55 * time.Second
 )
 
 // Client for Watcher APIs as a library
@@ -70,14 +70,51 @@ func NewLibraryClient(opts metricsprovider.MetricsProviderOpts) (Client, error) 
 func NewServiceClient(watcherAddress string) (Client, error) {
 	return serviceClient{
 		httpClient: http.Client{
-			Timeout: httpClientTimeoutSeconds,
+			Timeout: httpClientTimeoutSecond,
 		},
 		watcherAddress: watcherAddress,
 	}, nil
 }
 
+func (c libraryClient) Healthy() error {
+	return c.watcher.Healthy()
+}
+
 func (c libraryClient) GetLatestWatcherMetrics() (*metricstype.WatcherMetrics, error) {
 	return c.watcher.GetLatestWatcherMetrics(metricstype.FifteenMinutes)
+}
+
+func (c libraryClient) GetCompactWatcherMetrics() (*metricstype.WatcherMetrics, error) {
+	// Todo
+	panic("unimplement")
+	return nil, nil
+}
+
+func (c serviceClient) Healthy() error {
+	req, err := http.NewRequest(http.MethodGet, c.watcherAddress+watcher.HealthCheckUrl, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	klog.V(6).Infof("received status code %v from watcher", resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	} else {
+		err = fmt.Errorf("received status code %v from watcher", resp.StatusCode)
+		klog.Error(err)
+		return err
+	}
+}
+
+func (c serviceClient) GetCompactWatcherMetrics() (*metricstype.WatcherMetrics, error) {
+	// Todo
+	panic("unimplement")
+	return nil, nil
 }
 
 func (c serviceClient) GetLatestWatcherMetrics() (*metricstype.WatcherMetrics, error) {
@@ -96,7 +133,8 @@ func (c serviceClient) GetLatestWatcherMetrics() (*metricstype.WatcherMetrics, e
 	klog.V(6).Infof("received status code %v from watcher", resp.StatusCode)
 	if resp.StatusCode == http.StatusOK {
 		data := metricstype.Data{NodeMetricsMap: make(map[string]metricstype.NodeMetrics)}
-		metrics := metricstype.WatcherMetrics{Data: data}
+		statisticsDate := metricstype.StatisticsData{StatisticsMap: make(map[string]metricstype.NodeMetrics)}
+		metrics := metricstype.WatcherMetrics{Data: data, Statistics: statisticsDate}
 		dec := gojay.BorrowDecoder(resp.Body)
 		defer dec.Release()
 		err = dec.Decode(&metrics)
