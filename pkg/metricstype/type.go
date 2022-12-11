@@ -31,6 +31,8 @@ const (
 	Bytes   = "bytes"
 	MiB     = "MiB"
 	M       = "m"
+
+	ALL_COURSE_LABEL = "all"
 )
 
 type Window struct {
