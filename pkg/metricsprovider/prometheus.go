@@ -98,7 +98,7 @@ const (
 	PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
 	// need a label to confirm
 	// Todo(label)
-	courseLabel                        = "course_id"
+	courseLabel                        = metricstype.DEFAULT_COURSE_LABEL
 	nodeNameLabel                      = "kubernetes_node"
 	PromSQLNodePodCountOfLabel PromSQL = "sum by(" + courseLabel + "," + nodeNameLabel + ") (kube_pod_labels)"
 )
@@ -117,12 +117,12 @@ var (
 		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
 		PromSQLNodeDiskReadUtilRate:               "node_disk_read_util_rate",
 		PromSQLNodeDiskWriteUtilRate:              "node_disk_write_util_rate",
-		PromSQLNodeDiskSaturation5m:               "node_disk_saturation",
+		PromSQLNodeDiskSaturation5m:               metricstype.NODE_DISK_SATURATION,
 		PromSQLNodeDiskUtilRate5m:                 "node_disk_util_rate",
 		NodeCpuUtilRate5m:                         "node_cpu_util_rate",
-		NodeNetworkReceiveBytesExcludinglo5m:      "node_network_receive_bytes_excluding_lo",
+		NodeNetworkReceiveBytesExcludinglo5m:      metricstype.NODE_NETWORK_RECEIVE_BYTES_EXCLUDING_LO,
 		NodeNetworkReceiveDropBytesExcludinglo5m:  "node_network_receive_drop_bytes_excluding_lo",
-		NodeNetworkTransmitBytesExcludinglo5m:     "node_network_transmit_bytes_excluding_lo",
+		NodeNetworkTransmitBytesExcludinglo5m:     metricstype.NODE_NETWORK_TRANSMIT_BYTES_EXCLUDING_LO,
 		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
 		PromSQLNodeThreads:                        "node_thread_count",
 		NodeRunningPodCount:                       "node_running_pod_count",
