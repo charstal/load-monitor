@@ -97,7 +97,7 @@ const (
 		instance_device:node_disk_io_time_weighted_seconds:rate5m 
 		/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m)))`
 
-	PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
+	// PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
 	// need a label to confirm
 	// Todo(label)
 	courseLabel                        = metricstype.DEFAULT_COURSE_LABEL
@@ -114,7 +114,7 @@ var (
 		NodeNetworkTotalBytesExcludinglo5m,
 	}
 	sqlSetTimes = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
-	sqlNoTime   = []PromResource{NodeRunningPodCount, PromSQLNodeThreads, PromSQLNodePodCountOfLabel}
+	sqlNoTime   = []PromResource{NodeRunningPodCount, PromSQLNodePodCountOfLabel} // PromSQLNodeThreads,
 
 	sql2NameMap = map[string]string{
 		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
@@ -128,9 +128,9 @@ var (
 		NodeNetworkTransmitBytesExcludinglo5m:     metricstype.NODE_NETWORK_TRANSMIT_BYTES_EXCLUDING_LO,
 		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
 		NodeNetworkTotalBytesExcludinglo5m:        metricstype.NODE_NETWORK_TOTAL_BYTES_PERCENTAGE_EXCLUDING_LO,
-		PromSQLNodeThreads:                        "node_thread_count",
 		NodeRunningPodCount:                       "node_running_pod_count",
 		PromSQLNodePodCountOfLabel:                "node_pod_count_of_label",
+		// PromSQLNodeThreads:                        "node_thread_count",
 	}
 )
 
