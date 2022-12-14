@@ -110,4 +110,5 @@ const (
 	DefaultInfluxURL   = "http://192.168.122.67:8086"
 	DefaultInfluxToken = "YEkyUh-YUJ6pfV3Tf996_uHQan_szSihhTxdgxGf9HDMxQ2AXin5UqXN7EoKeHDaM9p12yKOngeD-OrbKf0zTA=="
 	DefaultInfluxOrg   = "mo"
+	DefaultInfluxDB    = "k8s-info"
 )

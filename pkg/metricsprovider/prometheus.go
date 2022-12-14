@@ -78,8 +78,10 @@ const (
 	NodeNetworkReceiveDropBytesExcludinglo5m  PromResource = "instance:node_network_receive_drop_excluding_lo:rate5m"
 	NodeNetworkTransmitBytesExcludinglo5m     PromResource = "instance:node_network_transmit_bytes_excluding_lo:rate5m"
 	NodeNetworkTransmitDropBytesExcludinglo5m PromResource = "instance:node_network_transmit_drop_excluding_lo:rate5m"
-	NodeDiskIOTimeSecondsRate5m               PromResource = "instance_device:node_disk_io_time_seconds:rate5m"
-	NodeDiskIOTimeWeightedSecondsRate5m       PromResource = "instance_device:node_disk_io_time_weighted_seconds:rate5m"
+	NodeNetworkTotalBytesExcludinglo5m        PromResource = `instance:node_network_receive_bytes_excluding_lo:rate5m
+																+instance:node_network_transmit_bytes_excluding_lo:rate5m`
+	NodeDiskIOTimeSecondsRate5m         PromResource = "instance_device:node_disk_io_time_seconds:rate5m"
+	NodeDiskIOTimeWeightedSecondsRate5m PromResource = "instance_device:node_disk_io_time_weighted_seconds:rate5m"
 )
 
 const (
@@ -109,6 +111,7 @@ var (
 		PromSQLNodeDiskSaturation5m, PromSQLNodeDiskUtilRate5m, NodeCpuUtilRate5m,
 		NodeNetworkReceiveBytesExcludinglo5m, NodeNetworkReceiveDropBytesExcludinglo5m,
 		NodeNetworkTransmitBytesExcludinglo5m, NodeNetworkTransmitDropBytesExcludinglo5m,
+		NodeNetworkTotalBytesExcludinglo5m,
 	}
 	sqlSetTimes = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
 	sqlNoTime   = []PromResource{NodeRunningPodCount, PromSQLNodeThreads, PromSQLNodePodCountOfLabel}
@@ -124,6 +127,7 @@ var (
 		NodeNetworkReceiveDropBytesExcludinglo5m:  "node_network_receive_drop_bytes_excluding_lo",
 		NodeNetworkTransmitBytesExcludinglo5m:     metricstype.NODE_NETWORK_TRANSMIT_BYTES_EXCLUDING_LO,
 		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
+		NodeNetworkTotalBytesExcludinglo5m:        metricstype.NODE_NETWORK_TOTAL_BYTES_PERCENTAGE_EXCLUDING_LO,
 		PromSQLNodeThreads:                        "node_thread_count",
 		NodeRunningPodCount:                       "node_running_pod_count",
 		PromSQLNodePodCountOfLabel:                "node_pod_count_of_label",
@@ -435,6 +439,13 @@ func (s promClient) sqlWithTime2MetricMap(sql string, data model.Value, rollup s
 			unit := ""
 			if strings.Contains(sql2NameMap[sql], "bytes") {
 				unit = metricstype.Bytes
+			}
+			if sql == NodeNetworkTotalBytesExcludinglo5m {
+				value = value / cfg.DiskBandwidthBytes * 100
+				unit = ""
+			}
+			if sql == PromSQLNodeDiskSaturation5m {
+				value = value * 100
 			}
 			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: "", Operator: metricstype.UnknownOperator, Rollup: rollup, Unit: unit, Value: value}
 			curMetrics[host] = append(curMetrics[host], curMetric)

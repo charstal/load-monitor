@@ -97,6 +97,7 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 
 		watcherMetrics := metricMapToWatcherMetrics(hostMetrics, w.statisticsReader.GetMetrics(), w.client.Name(), *curWindow)
 		w.appendWatcherMetrics(metric, &watcherMetrics)
+		go w.storage.StoreMetrics(&watcherMetrics)
 	}
 
 	windowWatcher := func(duration string) {

@@ -39,6 +39,8 @@ const (
 	KUBE_NODE_STATUS_CAPACITY                = "kube_node_status_capacity"
 	NODE_NETWORK_RECEIVE_BYTES_EXCLUDING_LO  = "node_network_receive_bytes_excluding_lo"
 	NODE_NETWORK_TRANSMIT_BYTES_EXCLUDING_LO = "node_network_transmit_bytes_excluding_lo"
+	// NODE_NETWORK_TOTAL_BYTES_EXCLUDING_LO            = "node_network_total_bytes_excluding_lo"
+	NODE_NETWORK_TOTAL_BYTES_PERCENTAGE_EXCLUDING_LO = "node_network_total_bytes_percentage_excluding_lo"
 )
 
 type Window struct {

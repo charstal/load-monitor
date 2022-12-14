@@ -7,6 +7,7 @@ import (
 	"time"
 
 	cfg "github.com/charstal/load-monitor/pkg/config"
+	"github.com/charstal/load-monitor/pkg/metricstype"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
@@ -18,12 +19,14 @@ const (
 	InfluxDBUrlKey   = "INFLUXDB_URL"
 	InfluxDBTokenKey = "INFLUXDB_TOKEN"
 	InfluxDBOrgKey   = "INFLUXDB_ORG"
+	InfluxDBName     = "INFLUXDB_DB"
 )
 
 var (
 	influxUrl   string
 	influxToken string
 	influxOrg   string
+	influxDB    string
 )
 
 func NewStorage() (*Storage, error) {
@@ -40,10 +43,66 @@ func NewStorage() (*Storage, error) {
 	if !ok {
 		influxOrg = cfg.DefaultInfluxOrg
 	}
+	influxDB, ok = os.LookupEnv(InfluxDBName)
+	if !ok {
+		influxDB = cfg.DefaultInfluxDB
+	}
 
 	client := influxdb2.NewClient(influxUrl, influxToken)
 
 	return &Storage{client: client}, nil
+}
+
+func (s *Storage) StoreMetrics(metric *metricstype.WatcherMetrics) error {
+	if metric == nil {
+		return nil
+	}
+	data := metric.Data.NodeMetricsMap
+	window := metric.Window
+	timestamp := window.End
+	duration_type := window.Duration
+
+	writeAPI := s.client.WriteAPIBlocking(influxOrg, influxDB)
+
+	for key, values := range data {
+		for _, v := range values.Metrics {
+			p := influxdb2.NewPointWithMeasurement("node").AddTag("node", key).AddTag("duration", duration_type).SetTime(time.Unix(timestamp, 0))
+			name := createName(v.Name, v.Type, v.Operator, v.Unit)
+			// fmt.Println(name)
+			p.AddField(name, v.Value)
+			// p.AddField("operator", v.Operator)
+			// p.AddField("type", v.Type)
+			// p.AddField("unit", v.Unit)
+			// p.AddField()
+
+			writeAPI.WritePoint(context.Background(), p)
+		}
+	}
+
+	s.client.Close()
+	return nil
+}
+
+func createName(name, resourceType, operator, unit string) string {
+	allName := name
+
+	comactFunc := func(name, s string) string {
+		name = name + ":" + s
+
+		return name
+	}
+
+	if resourceType != "" {
+		allName = comactFunc(allName, resourceType)
+	}
+	if operator != "" {
+		allName = comactFunc(allName, operator)
+	}
+	if unit != "" {
+		allName = comactFunc(allName, unit)
+	}
+
+	return allName
 }
 
 func (s *Storage) test() {
