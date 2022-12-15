@@ -23,8 +23,8 @@ NODE_LABEL = "node"
 
 # Todo(label)
 # need change label
-prom_course_label = "instance"
-prom_node_label = "kubernetes_node"
+prom_course_label = "label_course_id"
+prom_node_label = "node"
 
 
 logging.info("promtheus address:" + PROMETHEUS_URL)
@@ -60,12 +60,25 @@ def fetch_label(data_total_dict):
     data = range_data_query("last_over_time(kube_pod_labels[15d])")
     for d in data:
         d = d["metric"]
+        # only record the pod that has prom_course_label
         if prom_course_label in d:
             dd = dict()
             dd[COURSE_LABEL] = d[prom_course_label]
-            if prom_node_label in d:
-                dd["node"] = d[prom_node_label]
+            # record the node name
+            # if prom_node_label in d:
+            #     dd["node"] = d[prom_node_label]
             data_total_dict[d["pod"]] = dd
+
+
+def fetch_node_for_pod(data_total_dict):
+    data = range_data_query("kube_pod_info")
+    for d in data:
+        d = d["metric"]
+        if prom_node_label in d:
+            pod_name = d["pod"]
+            if pod_name in data_total_dict:
+                node_name = d[prom_node_label]
+                data_total_dict[pod_name][NODE_LABEL] = node_name
 
 
 def fetch_metrics(data_total_dict):
@@ -130,6 +143,7 @@ def run():
     source_data_dict = dict()
 
     fetch_label(source_data_dict)
+    fetch_node_for_pod(source_data_dict)
     fetch_metrics(source_data_dict)
     data_total = analysis(source_data_dict)
     # file_paths = to_file(data_total_dict)

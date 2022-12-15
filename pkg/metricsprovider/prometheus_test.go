@@ -72,3 +72,12 @@ func TestGetAllMetrics(t *testing.T) {
 	t.Log(res)
 
 }
+
+func TestGetNodeClass(t *testing.T) {
+	client, err := NewPromClient(opt)
+	assert.Nil(t, err)
+
+	err = client.(promClient).fetchNodeClassNumOfPodMetrics(nil)
+	assert.Nil(t, err)
+
+}

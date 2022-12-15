@@ -33,7 +33,7 @@ const (
 	M       = "m"
 
 	ALL_COURSE_LABEL     = "all"
-	DEFAULT_COURSE_LABEL = "course_id"
+	DEFAULT_COURSE_LABEL = "label_course_id"
 
 	NODE_DISK_SATURATION                     = "node_disk_saturation"
 	KUBE_NODE_STATUS_CAPACITY                = "kube_node_status_capacity"

@@ -100,9 +100,11 @@ const (
 	// PromSQLNodeThreads PromSQL = "sum by (node)(container_threads)"
 	// need a label to confirm
 	// Todo(label)
-	courseLabel                        = metricstype.DEFAULT_COURSE_LABEL
-	nodeNameLabel                      = "kubernetes_node"
-	PromSQLNodePodCountOfLabel PromSQL = "sum by(" + courseLabel + "," + nodeNameLabel + ") (kube_pod_labels)"
+	// courseLabel                        = metricstype.DEFAULT_COURSE_LABEL
+	// nodeNameLabel                      = "kubernetes_node"
+	// PromSQLNodePodCountOfLabel PromSQL = "sum by(" + courseLabel + "," + nodeNameLabel + ") (kube_pod_labels)"
+
+	PodClassOfNodeName = "pod_class_of_node_count"
 )
 
 var (
@@ -114,7 +116,7 @@ var (
 		NodeNetworkTotalBytesExcludinglo5m,
 	}
 	sqlSetTimes = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
-	sqlNoTime   = []PromResource{NodeRunningPodCount, PromSQLNodePodCountOfLabel} // PromSQLNodeThreads,
+	sqlNoTime   = []PromResource{NodeRunningPodCount}
 
 	sql2NameMap = map[string]string{
 		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
@@ -129,7 +131,7 @@ var (
 		NodeNetworkTransmitDropBytesExcludinglo5m: "node_network_transmit_drop_bytes_excluding_lo",
 		NodeNetworkTotalBytesExcludinglo5m:        metricstype.NODE_NETWORK_TOTAL_BYTES_PERCENTAGE_EXCLUDING_LO,
 		NodeRunningPodCount:                       "node_running_pod_count",
-		PromSQLNodePodCountOfLabel:                "node_pod_count_of_label",
+		// PromSQLNodePodCountOfLabel:                "node_pod_count_of_label",
 		// PromSQLNodeThreads:                        "node_thread_count",
 	}
 )
@@ -266,6 +268,7 @@ func (s promClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string
 	if err := s.fetchFromSql(window, &allMetrics); err != nil {
 		log.Errorf("cannot fetching from sql %v", err)
 	}
+	s.fetchCustomizationMetrics(&allMetrics)
 
 	return allMetrics, anyerr
 
@@ -273,6 +276,89 @@ func (s promClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string
 
 func (s promClient) FetchHostMetrics(host string, window *metricstype.Window) ([]metricstype.Metric, error) {
 	return nil, nil
+}
+
+func (s promClient) fetchCustomizationMetrics(m *map[string][]metricstype.Metric) {
+	if err := s.fetchNodeClassNumOfPodMetrics(m); err != nil {
+		log.Errorf("cannot generate node class num of pod %v", err)
+	}
+}
+
+func (s promClient) fetchNodeClassNumOfPodMetrics(m *map[string][]metricstype.Metric) error {
+	runningPodSql := `kube_pod_status_phase{phase="Running"}`
+	allRunningPodMap := make(map[string]struct{})
+	data, err := s.getPromResults(runningPodSql)
+	if err != nil {
+		log.Errorf("error querying Prometheus for query %v: %v\n", runningPodSql, err)
+		return err
+	}
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			if result.Metric["phase"] == "Running" {
+				allRunningPodMap[string(result.Metric["pod"])] = struct{}{}
+			}
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+		return nil
+	}
+
+	allRunningPod2NodeMap := make(map[string]string)
+	node2PodSql := "kube_pod_info"
+	data, err = s.getPromResults(node2PodSql)
+	if err != nil {
+		log.Errorf("error querying Prometheus for query %v: %v\n", runningPodSql, err)
+		return err
+	}
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			if _, ok := allRunningPodMap[string(result.Metric["pod"])]; ok {
+				allRunningPod2NodeMap[string(result.Metric["pod"])] = string(result.Metric["node"])
+			}
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+		return nil
+	}
+
+	podLaabelSql := "kube_pod_labels"
+	nodePodClassNum := make(map[string]map[string]int)
+	data, err = s.getPromResults(podLaabelSql)
+	if err != nil {
+		log.Errorf("error querying Prometheus for query %v: %v\n", runningPodSql, err)
+		return err
+	}
+	switch data.(type) {
+	case model.Vector:
+		for _, result := range data.(model.Vector) {
+			if label, ok := result.Metric["label_course_id"]; ok {
+				label := string(label)
+				if node, ok := allRunningPod2NodeMap[string(result.Metric["pod"])]; ok {
+					if _, ok := nodePodClassNum[node][label]; !ok {
+						mm := make(map[string]int)
+						mm[label] = 0
+						nodePodClassNum[node] = mm
+					}
+					nodePodClassNum[node][label] = nodePodClassNum[node][label] + 1
+				}
+			}
+		}
+	default:
+		log.Errorf("error: The capacity results should not be type: %v.\n", data.Type())
+		return nil
+	}
+
+	for host, mm := range nodePodClassNum {
+		for t, v := range mm {
+			curMetric := metricstype.Metric{Name: PodClassOfNodeName, Type: t, Operator: metricstype.Latest,
+				Rollup: "", Unit: metricstype.Integer, Value: float64(v)}
+			(*m)[host] = append((*m)[host], curMetric)
+		}
+	}
+
+	return nil
 }
 
 func (s promClient) fetchFromSql(window *metricstype.Window, m *map[string][]metricstype.Metric) error {
@@ -411,12 +497,9 @@ func (s promClient) sqlWithNoTime2MetricMap(sql string, data model.Value) map[st
 	case model.Vector:
 		for _, result := range data.(model.Vector) {
 			var host, label string
-			if sql == PromSQLNodePodCountOfLabel {
-				host = string(result.Metric[nodeNameLabel])
-				label = string(result.Metric[courseLabel])
-			} else {
-				host = string(result.Metric["node"])
-			}
+
+			host = string(result.Metric["node"])
+
 			value := float64(result.Value)
 			curMetric := metricstype.Metric{Name: sql2NameMap[sql], Type: label, Operator: metricstype.Latest, Rollup: "", Unit: metricstype.Integer, Value: value}
 
