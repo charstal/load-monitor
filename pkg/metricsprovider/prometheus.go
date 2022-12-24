@@ -521,10 +521,10 @@ func (s promClient) sqlWithTime2MetricMap(sql string, data model.Value, rollup s
 			value := float64(result.Value)
 			unit := ""
 			if strings.Contains(sql2NameMap[sql], "bytes") {
-				unit = metricstype.Bytes
+				unit = metricstype.Byte
 			}
 			if sql == NodeNetworkTotalBytesExcludinglo5m {
-				value = value / cfg.DiskBandwidthBytes * 100
+				value = value / cfg.DiskBandwidthByte * 100
 				unit = ""
 			}
 			if sql == PromSQLNodeDiskSaturation5m {
@@ -561,7 +561,7 @@ func (s promClient) nodeCapacity2MetricMap(data model.Value) map[string][]metric
 
 	for host := range curMetrics {
 		// networkcapacity
-		networkcapcaity := metricstype.Metric{Name: "kube_node_status_capacity", Type: metricstype.Network, Operator: operator, Rollup: metricstype.Latest, Unit: metricstype.Bytes, Value: cfg.DiskBandwidthBytes}
+		networkcapcaity := metricstype.Metric{Name: "kube_node_status_capacity", Type: metricstype.Network, Operator: operator, Rollup: metricstype.Latest, Unit: metricstype.Byte, Value: cfg.DiskBandwidthByte}
 		curMetrics[host] = append(curMetrics[host], networkcapcaity)
 	}
 

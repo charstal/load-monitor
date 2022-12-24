@@ -19,10 +19,10 @@ const (
 )
 
 var (
-	DiskBandwidthGB    float64
-	DiskBandwidthMB    float64
-	DiskBandwidthKB    float64
-	DiskBandwidthBytes float64
+	DiskBandwidthGB   float64
+	DiskBandwidthMB   float64
+	DiskBandwidthKB   float64
+	DiskBandwidthByte float64
 )
 
 func init() {
@@ -50,7 +50,7 @@ func init() {
 				panic(err)
 			}
 		}
-		DiskBandwidthBytes = DiskBandwidthKB / 1024
+		DiskBandwidthByte = DiskBandwidthKB / 1024
 		DiskBandwidthMB = DiskBandwidthKB * 1024
 		DiskBandwidthGB = DiskBandwidthMB * 1024
 		return
@@ -65,7 +65,7 @@ func init() {
 			}
 		}
 		DiskBandwidthKB = DiskBandwidthMB / 1024
-		DiskBandwidthBytes = DiskBandwidthKB / 1024
+		DiskBandwidthByte = DiskBandwidthKB / 1024
 		DiskBandwidthGB = DiskBandwidthMB * 1024
 		return
 	}
@@ -79,7 +79,7 @@ func init() {
 		}
 		DiskBandwidthMB = DiskBandwidthGB / 1024
 		DiskBandwidthKB = DiskBandwidthMB / 1024
-		DiskBandwidthBytes = DiskBandwidthKB / 1024
+		DiskBandwidthByte = DiskBandwidthKB / 1024
 		return
 	}
 
@@ -87,7 +87,7 @@ func init() {
 	DiskBandwidthMB = DefaultBandWidthMB
 	DiskBandwidthGB = DefaultBandWidthMB / 1024
 	DiskBandwidthKB = DefaultBandWidthMB * 1024
-	DiskBandwidthBytes = DefaultBandWidthMB * 1024 * 1024
+	DiskBandwidthByte = DefaultBandWidthMB * 1024 * 1024
 }
 
 const (

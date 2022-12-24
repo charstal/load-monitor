@@ -28,7 +28,7 @@ const (
 	Ratio   = "ratio"
 	Core    = "core"
 	Integer = "integer"
-	Bytes   = "bytes"
+	Byte    = "byte"
 	MiB     = "MiB"
 	M       = "m"
 
