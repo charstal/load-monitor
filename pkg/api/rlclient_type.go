@@ -38,7 +38,7 @@ func (rl *PredictResponceResult) UnmarshalJSONObject(dec *gojay.Decoder, key str
 	return nil
 }
 
-func (rl *RLClientPredictResponce) NKeys() int {
+func (rl *PredictResponceResult) NKeys() int {
 	return 2
 }
 
@@ -55,6 +55,6 @@ func (rl *RLClientPredictResponce) UnmarshalJSONObject(dec *gojay.Decoder, key s
 	return nil
 }
 
-func (rl *PredictResponceResult) NKeys() int {
+func (rl *RLClientPredictResponce) NKeys() int {
 	return 3
 }
