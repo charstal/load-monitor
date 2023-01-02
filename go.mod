@@ -10,6 +10,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.8.1
 	go.mongodb.org/mongo-driver v1.11.0
+	k8s.io/api v0.21.6
 	k8s.io/apimachinery v0.21.6
 	k8s.io/client-go v0.21.6
 	k8s.io/klog/v2 v2.9.0

@@ -15,6 +15,8 @@ import (
 const (
 	httpClientTimeoutSecondForRL = 55 * time.Second
 
+	RLServerAddressKey = "RL_SERVER_ADDRESS"
+
 	healthCheckUrl = "/healthy"
 	updateUrl      = "/update"
 	predictUrl     = "/predict"

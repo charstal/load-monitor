@@ -111,4 +111,6 @@ const (
 	DefaultInfluxToken = "YEkyUh-YUJ6pfV3Tf996_uHQan_szSihhTxdgxGf9HDMxQ2AXin5UqXN7EoKeHDaM9p12yKOngeD-OrbKf0zTA=="
 	DefaultInfluxOrg   = "mo"
 	DefaultInfluxDB    = "k8s-info"
+
+	DefaultRLServerAddress = "http://localhost:8000"
 )
