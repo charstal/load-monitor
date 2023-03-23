@@ -163,6 +163,10 @@ func (or *OfflineReader) generateStatistics() {
 	// pull latest time
 	src := or.sourceStatistics
 
+	if src == nil {
+		return
+	}
+
 	if or.timeReceived.After(src.Time) {
 		return
 	}
