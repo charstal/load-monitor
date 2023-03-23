@@ -93,7 +93,7 @@ const (
 		instance_device:node_disk_io_time_seconds:rate5m
 	)`
 
-	PromSQLNodeDiskSaturation5m PromSQL = `sum by (instance) (
+	PromSQLNodeDiskSaturation5m PromSQL = `sum by (kubernetes_node) (
 		instance_device:node_disk_io_time_weighted_seconds:rate5m 
 		/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m)))`
 
