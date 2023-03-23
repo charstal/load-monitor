@@ -103,12 +103,12 @@ const (
 
 	// DefaultRemoteBaseDir = "offline"
 	// DefaultLocalBaseDir  = "statistics"
-	DefaultMongoURL                 = "mongodb://mo:momodel@192.168.122.67:27017/?authSource=mo"
-	DefaultMongoDatabase            = "mo"
+	DefaultMongoURL                 = "mongodb://192.168.30.154:27017"
+	DefaultMongoDatabase            = "load_monitor"
 	DefaultMongoStatisticCollection = "statistics"
 
-	DefaultInfluxURL   = "http://192.168.122.67:8086"
-	DefaultInfluxToken = "YEkyUh-YUJ6pfV3Tf996_uHQan_szSihhTxdgxGf9HDMxQ2AXin5UqXN7EoKeHDaM9p12yKOngeD-OrbKf0zTA=="
+	DefaultInfluxURL   = "http://192.168.30.154:8086"
+	DefaultInfluxToken = "K4cPAKvAFgmu0Kdfo0LZH6qS3jq1umX0zTOyV_oVyWM6p_nGq_R55MIE8RXDEXiopTJKpj2OiPJMRKVbx1P0Dg=="
 	DefaultInfluxOrg   = "mo"
 	DefaultInfluxDB    = "k8s-info"
 

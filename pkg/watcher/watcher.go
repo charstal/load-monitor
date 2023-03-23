@@ -109,7 +109,7 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 	}
 
 	// fetch statistic
-	w.statisticsReader.Update()
+	go w.statisticsReader.Update()
 
 	// w.storage.Test()
 
