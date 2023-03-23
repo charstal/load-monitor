@@ -530,7 +530,7 @@ func (s promClient) sqlWithTime2MetricMap(sql string, data model.Value, rollup s
 	switch data.(type) {
 	case model.Vector:
 		for _, result := range data.(model.Vector) {
-			host := string(result.Metric["instance"])
+			host := string(result.Metric["kubernetes_node"])
 			value := float64(result.Value)
 			unit := ""
 			if strings.Contains(sql2NameMap[sql], "bytes") {
@@ -610,7 +610,7 @@ func (s promClient) nodeCpuMem2MetricMap(data model.Value, metric PromResource, 
 	case model.Vector:
 		for _, result := range data.(model.Vector) {
 			value := float64(result.Value * 100)
-			curHost := string(result.Metric["instance"])
+			curHost := string(result.Metric["kubernetes_node"])
 			curMetric := metricstype.Metric{Name: metric, Type: metricType, Operator: operator, Rollup: rollup, Unit: unit, Value: value}
 			curMetrics[curHost] = append(curMetrics[curHost], curMetric)
 		}
