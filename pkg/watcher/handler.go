@@ -2,9 +2,7 @@ package watcher
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -167,18 +165,19 @@ type JobRequest struct {
 
 // Simple server status handler
 func (w *Watcher) jobFinishedHandler(resp http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
-	var req JobRequest
-	log.Info("job finshed")
-	if err := json.Unmarshal(body, &req); err == nil {
-		// fmt.Printf("%v", req)
-		resp.Write([]byte("Please add filepath and md5"))
-	}
+	// body, _ := io.ReadAll(r.Body)
+	// var req JobRequest
+
+	// if err := json.Unmarshal(body, &req); err == nil {
+	// 	// fmt.Printf("%v", req)
+	// 	resp.Write([]byte("Please add filepath and md5"))
+	// }
 	if err := w.statisticsReader.Update(); err != nil {
 		log.Warnf("job fail: %v", err)
 		resp.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
+	log.Info("job finshed")
 	resp.WriteHeader(http.StatusOK)
 }
 
