@@ -94,7 +94,7 @@ const (
 	// env variable that provides path to kube config file, if deploying from outside K8s cluster
 
 	DefaultKubeConfig     = "~/.kube/config"
-	DefaultPromAddress    = "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+	DefaultPromAddress    = "http://prometheus-server.svc.cluster.local:80"
 	DefaultPromhealthyURL = "-/healthy"
 
 	// DefaultETCDURL      = "etcd-dev.default.svc.cluster.local:2379"
