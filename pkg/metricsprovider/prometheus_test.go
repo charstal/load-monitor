@@ -66,7 +66,7 @@ func TestGetAllMetrics(t *testing.T) {
 	client, err := NewPromClient(opt)
 	assert.Nil(t, err)
 
-	res, err := client.FetchAllHostsMetrics(metricstype.CurrentFifteenMinuteWindow())
+	res, err := client.FetchAllHostsMetrics(metricstype.CurrentFiveMinuteWindow())
 	assert.Nil(t, err)
 
 	t.Log(res)
