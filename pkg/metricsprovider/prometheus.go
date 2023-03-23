@@ -108,15 +108,28 @@ const (
 )
 
 var (
-	ratioSource = []PromResource{NodeCpuRatio, NodeMemoryUtilRatio}
-	sqlSet5m    = []PromResource{
-		PromSQLNodeDiskSaturation5m, PromSQLNodeDiskUtilRate5m, NodeCpuUtilRate5m,
-		NodeNetworkReceiveBytesExcludinglo5m, NodeNetworkReceiveDropBytesExcludinglo5m,
-		NodeNetworkTransmitBytesExcludinglo5m, NodeNetworkTransmitDropBytesExcludinglo5m,
-		NodeNetworkTotalBytesExcludinglo5m,
+	ratioSource = []PromResource{
+		NodeCpuRatio,
+		NodeMemoryUtilRatio,
 	}
-	sqlSetTimes = []PromResource{PromSQLNodeDiskTotalUtilRate, PromSQLNodeDiskReadUtilRate, PromSQLNodeDiskWriteUtilRate}
-	sqlNoTime   = []PromResource{NodeRunningPodCount}
+	sqlSet5m = []PromResource{
+		PromSQLNodeDiskSaturation5m,
+		// PromSQLNodeDiskUtilRate5m,
+		// NodeCpuUtilRate5m,
+		// NodeNetworkReceiveBytesExcludinglo5m,
+		// NodeNetworkReceiveDropBytesExcludinglo5m,
+		// NodeNetworkTransmitBytesExcludinglo5m,
+		// NodeNetworkTransmitDropBytesExcludinglo5m,
+		// NodeNetworkTotalBytesExcludinglo5m,
+	}
+	sqlSetTimes = []PromResource{
+		// PromSQLNodeDiskTotalUtilRate,
+		// PromSQLNodeDiskReadUtilRate,
+		// PromSQLNodeDiskWriteUtilRate,
+	}
+	sqlNoTime = []PromResource{
+		// NodeRunningPodCount,
+	}
 
 	sql2NameMap = map[string]string{
 		PromSQLNodeDiskTotalUtilRate:              "node_disk_total_util_rate",
