@@ -17,7 +17,6 @@ limitations under the License.
 package metricsprovider
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -88,13 +87,13 @@ func (m metricsServerClient) Name() string {
 func (m metricsServerClient) FetchHostMetrics(host string, window *metricstype.Window) ([]metricstype.Metric, error) {
 	var metrics = []metricstype.Metric{}
 
-	nodeMetrics, err := m.metricsClientSet.MetricsV1beta1().NodeMetricses().Get(context.TODO(), host, metav1.GetOptions{})
+	nodeMetrics, err := m.metricsClientSet.MetricsV1beta1().NodeMetricses().Get(host, metav1.GetOptions{})
 	if err != nil {
 		return metrics, err
 	}
 	var cpuFetchedMetric metricstype.Metric
 	var memFetchedMetric metricstype.Metric
-	node, err := m.coreClientSet.CoreV1().Nodes().Get(context.Background(), host, metav1.GetOptions{})
+	node, err := m.coreClientSet.CoreV1().Nodes().Get(host, metav1.GetOptions{})
 	if err != nil {
 		return metrics, err
 	}
@@ -116,11 +115,11 @@ func (m metricsServerClient) FetchHostMetrics(host string, window *metricstype.W
 func (m metricsServerClient) FetchAllHostsMetrics(window *metricstype.Window) (map[string][]metricstype.Metric, error) {
 	metrics := make(map[string][]metricstype.Metric)
 
-	nodeMetricsList, err := m.metricsClientSet.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
+	nodeMetricsList, err := m.metricsClientSet.MetricsV1beta1().NodeMetricses().List(metav1.ListOptions{})
 	if err != nil {
 		return metrics, err
 	}
-	nodeList, err := m.coreClientSet.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	nodeList, err := m.coreClientSet.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return metrics, err
 	}
@@ -159,7 +158,7 @@ func (m metricsServerClient) FetchAllHostsMetrics(window *metricstype.Window) (m
 
 func (m metricsServerClient) Healthy() (int, error) {
 	var status int
-	m.metricsClientSet.RESTClient().Verb("HEAD").Do(context.Background()).StatusCode(&status)
+	m.metricsClientSet.RESTClient().Verb("HEAD").Do().StatusCode(&status)
 	if status != http.StatusOK {
 		return -1, fmt.Errorf("received response status code: %v", status)
 	}

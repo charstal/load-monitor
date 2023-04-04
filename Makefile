@@ -28,8 +28,8 @@ clean:
 	rm -rf ./bin
 
 image:
-	docker build -t load-monitor:v0.0.2 .
+	docker build -t load-monitor:v1.15.12 .
 
 remote: image
-	docker tag load-monitor:v0.0.2 registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v0.0.2
-	docker push registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v0.0.2
+	docker tag load-monitor:v1.15.12 registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v1.15.12
+	docker push registry.cn-hangzhou.aliyuncs.com/charstal/load-monitor:v1.15.12

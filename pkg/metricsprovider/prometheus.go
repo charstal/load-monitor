@@ -203,7 +203,7 @@ func NewPromClient(opts MetricsProviderOpts) (MetricsProviderClient, error) {
 		}
 
 		// Retrieve router CA cert
-		routerCAConfigMap, err := kclient.CoreV1().ConfigMaps("openshift-config-managed").Get(context.TODO(), "default-ingress-cert", metav1.GetOptions{})
+		routerCAConfigMap, err := kclient.CoreV1().ConfigMaps("openshift-config-managed").Get("default-ingress-cert", metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
