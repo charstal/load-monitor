@@ -51,7 +51,7 @@ func (w *Watcher) Healthy() error {
 func (w *Watcher) startHttpServer(shutdown chan struct{}) {
 	http.HandleFunc(BaseUrl, w.handler)
 	http.HandleFunc(HealthCheckUrl, w.healthCheckHandler)
-	http.HandleFunc(JobUrl, w.jobFinishedHandler)
+	// http.HandleFunc(JobUrl, w.jobFinishedHandler)
 	http.HandleFunc(MertricUrl, w.metricHandler)
 	http.HandleFunc(ScheduleUrl, w.scheduleHandler)
 
@@ -164,22 +164,22 @@ type JobRequest struct {
 }
 
 // Simple server status handler
-func (w *Watcher) jobFinishedHandler(resp http.ResponseWriter, r *http.Request) {
-	// body, _ := io.ReadAll(r.Body)
-	// var req JobRequest
+// func (w *Watcher) jobFinishedHandler(resp http.ResponseWriter, r *http.Request) {
+// 	// body, _ := io.ReadAll(r.Body)
+// 	// var req JobRequest
 
-	// if err := json.Unmarshal(body, &req); err == nil {
-	// 	// fmt.Printf("%v", req)
-	// 	resp.Write([]byte("Please add filepath and md5"))
-	// }
-	if err := w.statisticsReader.Update(); err != nil {
-		log.Warnf("job fail: %v", err)
-		resp.WriteHeader(http.StatusServiceUnavailable)
-		return
-	}
-	log.Info("job finshed")
-	resp.WriteHeader(http.StatusOK)
-}
+// 	// if err := json.Unmarshal(body, &req); err == nil {
+// 	// 	// fmt.Printf("%v", req)
+// 	// 	resp.Write([]byte("Please add filepath and md5"))
+// 	// }
+// 	if err := w.statisticsReader.Update(); err != nil {
+// 		log.Warnf("job fail: %v", err)
+// 		resp.WriteHeader(http.StatusServiceUnavailable)
+// 		return
+// 	}
+// 	log.Info("job finshed")
+// 	resp.WriteHeader(http.StatusOK)
+// }
 
 func (w *Watcher) scheduleHandler(resp http.ResponseWriter, r *http.Request) {
 	resp.Write([]byte("unimplement"))

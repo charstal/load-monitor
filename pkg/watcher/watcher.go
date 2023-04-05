@@ -28,22 +28,21 @@ import (
 
 	"github.com/charstal/load-monitor/pkg/metricsprovider"
 	"github.com/charstal/load-monitor/pkg/metricstype"
-	"github.com/charstal/load-monitor/pkg/statistics"
 	"github.com/charstal/load-monitor/pkg/storage"
 	log "github.com/sirupsen/logrus"
 )
 
 type Watcher struct {
-	mutex            sync.RWMutex // For thread safe access to cache
-	fifteenMinute    []metricstype.WatcherMetrics
-	tenMinute        []metricstype.WatcherMetrics
-	fiveMinute       []metricstype.WatcherMetrics
-	cacheSize        int
-	client           metricsprovider.MetricsProviderClient
-	isStarted        bool // Indicates if the Watcher is started by calling StartWatching()
-	shutdown         chan os.Signal
-	statisticsReader *statistics.OfflineReader
-	storage          *storage.Storage
+	mutex         sync.RWMutex // For thread safe access to cache
+	fifteenMinute []metricstype.WatcherMetrics
+	tenMinute     []metricstype.WatcherMetrics
+	fiveMinute    []metricstype.WatcherMetrics
+	cacheSize     int
+	client        metricsprovider.MetricsProviderClient
+	isStarted     bool // Indicates if the Watcher is started by calling StartWatching()
+	shutdown      chan os.Signal
+	// statisticsReader *statistics.OfflineReader
+	storage *storage.Storage
 }
 
 // NewWatcher Returns a new initialised Watcher
@@ -51,10 +50,10 @@ func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 	sizePerWindow := 5
 
 	// init statistics offline reader
-	statistics, err := statistics.NewOfflineReader()
-	if err != nil {
-		panic("statistic init error")
-	}
+	// statistics, err := statistics.NewOfflineReader()
+	// if err != nil {
+	// 	panic("statistic init error")
+	// }
 
 	storage, err := storage.NewStorage()
 	if err != nil {
@@ -62,15 +61,15 @@ func NewWatcher(client metricsprovider.MetricsProviderClient) *Watcher {
 	}
 
 	return &Watcher{
-		mutex:            sync.RWMutex{},
-		fifteenMinute:    make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		tenMinute:        make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		fiveMinute:       make([]metricstype.WatcherMetrics, 0, sizePerWindow),
-		cacheSize:        sizePerWindow,
-		client:           client,
-		shutdown:         make(chan os.Signal, 1),
-		statisticsReader: statistics,
-		storage:          storage,
+		mutex:         sync.RWMutex{},
+		fifteenMinute: make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		tenMinute:     make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		fiveMinute:    make([]metricstype.WatcherMetrics, 0, sizePerWindow),
+		cacheSize:     sizePerWindow,
+		client:        client,
+		shutdown:      make(chan os.Signal, 1),
+		// statisticsReader: statistics,
+		storage: storage,
 	}
 }
 
@@ -95,7 +94,7 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 
 		// TODO： add tags, etc.
 
-		watcherMetrics := metricMapToWatcherMetrics(hostMetrics, w.statisticsReader.GetMetrics(), w.client.Name(), *curWindow)
+		watcherMetrics := metricMapToWatcherMetrics(hostMetrics, nil, w.client.Name(), *curWindow)
 		w.appendWatcherMetrics(metric, &watcherMetrics)
 		go w.storage.StoreMetrics(&watcherMetrics)
 	}
@@ -109,7 +108,7 @@ func (w *Watcher) StartWatching(shutdown chan struct{}) {
 	}
 
 	// fetch statistic
-	go w.statisticsReader.Update()
+	// go w.statisticsReader.Update()
 
 	// w.storage.Test()
 
